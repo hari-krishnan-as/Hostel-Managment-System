@@ -1,44 +1,79 @@
 const mongoose = require('mongoose');
 
-// connect to DB
-mongoose.connect("mongodb://localhost:27017/login")
-  .then(() => {
-    console.log("Database connected successfully");
-  })
-  .catch((err) => {
-    console.error("Database not connected:", err);
-  });
+// ✅ Connect to MongoDB
+mongoose.connect("mongodb://localhost:27017/login", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log("Database connected successfully");
+})
+.catch((err) => {
+  console.error("Database connection failed:", err);
+});
 
-// create schema
+// ✅ Schema definition
 const loginSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   department: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   semester: {
     type: Number,
-    required: true
+    required: true,
+    min: 1,
+    max: 10
   },
   hostelid: {
     type: String, 
-    required: true
+    required: true,
+    unique: true
   },
   password: {
     type: String,
     required: true
   },
-  role: {                // 👈 NEW FIELD
-        type: String,
-        enum: ["student", "admin"],
-        default: "student"
+  role: {                
+    type: String,
+    enum: ["student", "admin"],
+    default: "student"
+  },
+  registrationDate: {   
+    type: Date,
+    required: true
+  },
+
+  // ✅ Leave tracking
+  leaves: [
+    {
+      from: { type: Date, required: true },
+      to: { type: Date, required: true }
     }
+  ],
+
+  // ✅ Complaints
+  complaints: [
+    {
+      text: { type: String, required: true },
+      date: { type: Date, default: Date.now },
+      status: { type: String, default: "Pending" }
+    }
+  ],
+
+  // ✅ Suggestions
+  suggestions: [
+    {
+      text: { type: String, required: true, trim: true }
+    }
+  ]
 });
 
-// collection part
-const collection = mongoose.model("users", loginSchema);
-
-module.exports = collection;
+// ✅ Collection (Model)
+const User = mongoose.model("users", loginSchema);
+module.exports = User;
