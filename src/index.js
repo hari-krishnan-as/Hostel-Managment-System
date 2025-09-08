@@ -5,11 +5,11 @@ const session = require("express-session");
 const collection = require("./config"); // Your mongoose model
 const app = express();
 
-// ✅ Convert data into JSON format
+//  Convert data into JSON format
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ✅ Configure session middleware
+//  Configure session middleware
 app.use(
   session({
     secret: "your_secret_key", // Use a strong, secret key in production
@@ -19,16 +19,16 @@ app.use(
   })
 );
 
-// ✅ Set view engine
+//  Set view engine
 app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "../views"));
 
-// ✅ Middleware to serve static files
+//  Middleware to serve static files
 app.use(express.static(path.join(__dirname, "../public")));
 
 const hbs = require("hbs");
 
-// ✅ Attendance calculator function (backend use)
+//  Attendance calculator function (backend use)
 function calculateAttendanceDays(registrationDate, leaves = []) {
   const today = new Date();
   const regDate = new Date(registrationDate);
@@ -51,7 +51,7 @@ function calculateAttendanceDays(registrationDate, leaves = []) {
   return { presentDays, offDays };
 }
 
-// ✅ Handlebars helper for calculating days between leave dates
+//  Handlebars helper for calculating days between leave dates
 hbs.registerHelper("calcDays", function (from, to) {
   const start = new Date(from);
   const end = new Date(to);
@@ -64,7 +64,7 @@ hbs.registerHelper("calcDays", function (from, to) {
   return diff;
 });
 
-// ✅ Middleware to protect routes
+//  Middleware to protect routes
 const isAuthenticated = (req, res, next) => {
   if (req.session.userId) {
     next();
@@ -75,22 +75,53 @@ const isAuthenticated = (req, res, next) => {
 
 // ================= ROUTES =================
 
-// ✅ Home
+//  Home
 app.get("/", (req, res) => {
   res.render("home");
 });
 
-// ✅ Login
+//  Login
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
-// ✅ Register Request Form
+//  Register Request Form
 app.get("/request", (req, res) => {
   res.render("request");
 });
 
-// ✅ Logout
+//settings
+app.get("/settings", (req, res) => {
+  res.render("user/settings");
+});
+
+//notifications
+app.get("/notifications", (req, res) => {
+  res.render("user/notifications");
+});
+
+// Profile Page
+app.get("/profile", isAuthenticated, async (req, res) => {
+  try {
+    const user = await collection.findOne({ hostelid: req.session.userId });
+
+    if (!user) return res.redirect("/login");
+
+    res.render("user/profile", {
+      name: user.name,
+      department: user.department,
+      semester: user.semester,
+      hostelid: user.hostelid,
+      role: user.role,
+      registrationDate: user.registrationDate.toDateString(),
+    });
+  } catch (err) {
+    console.error(err);
+    res.send("<script>alert('Error loading profile'); window.location.href='/student-dashboard';</script>");
+  }
+});
+
+//  Logout
 app.get("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -103,7 +134,7 @@ app.get("/logout", (req, res) => {
   });
 });
 
-// ✅ Student Dashboard
+//  Student Dashboard
 app.get("/student-dashboard", isAuthenticated, async (req, res) => {
   try {
     const user = await collection.findOne({
@@ -122,7 +153,7 @@ app.get("/student-dashboard", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Admin Dashboard
+//  Admin Dashboard
 app.get("/admin-dashboard", isAuthenticated, async (req, res) => {
   try {
     const user = await collection.findOne({
@@ -141,7 +172,7 @@ app.get("/admin-dashboard", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Mess Cut Form (GET)
+//  Mess Cut Form (GET)
 app.get("/mess-cut", isAuthenticated, async (req, res) => {
   try {
     const user = await collection.findOne({ hostelid: req.session.userId });
@@ -196,8 +227,7 @@ app.post("/complaints", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Show Suggestions Page
-// ✅ Show Suggestions Page
+//  Show Suggestions Page
 app.get("/suggestions", isAuthenticated, async (req, res) => {
   try {
     const user = await collection.findOne({ hostelid: req.session.userId });
@@ -214,7 +244,7 @@ app.get("/suggestions", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Handle Suggestion Submit
+//  Handle Suggestion Submit
 app.post("/suggestions", isAuthenticated, async (req, res) => {
   try {
     const { suggestion } = req.body;
@@ -233,7 +263,7 @@ app.post("/suggestions", isAuthenticated, async (req, res) => {
 });
 
 
-// ✅ Apply Mess Cut Leave (POST)
+//  Apply Mess Cut Leave (POST)
 app.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
@@ -260,7 +290,7 @@ app.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Attendance
+//  Attendance
 app.get("/attendance", isAuthenticated, async (req, res) => {
   try {
     const user = await collection.findOne({
@@ -290,7 +320,7 @@ app.get("/attendance", isAuthenticated, async (req, res) => {
   }
 });
 
-// ✅ Register user
+//  Register user
 app.post("/request", async (req, res) => {
   const data = {
     name: req.body.name,
@@ -319,7 +349,7 @@ app.post("/request", async (req, res) => {
   }
 });
 
-// ✅ Login user
+//  Login user
 app.post("/login", async (req, res) => {
   try {
     const user = await collection.findOne({
@@ -357,7 +387,47 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// ✅ Server listen
+//  Password Change (POST)
+app.post("/change-password", isAuthenticated, async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res.send("<script>alert('All fields are required'); window.location.href='/settings';</script>");
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.send("<script>alert('New passwords do not match'); window.location.href='/settings';</script>");
+    }
+
+    const user = await collection.findOne({ hostelid: req.session.userId });
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Verify old password
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordMatch) {
+      return res.send("<script>alert('Old password is incorrect'); window.location.href='/settings';</script>");
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password in DB
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.send("<script>alert('Password changed successfully'); window.location.href='/settings';</script>");
+  } catch (error) {
+    console.error(error);
+    return res.send("<script>alert('Something went wrong'); window.location.href='/settings';</script>");
+  }
+});
+
+
+//  Server listen
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
