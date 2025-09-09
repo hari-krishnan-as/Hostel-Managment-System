@@ -162,4 +162,10 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
   );
 });
 
+// Notifications
+router.get("/notifications", isAuthenticated, async (req, res) => {
+  const user = await collection.findOne({ hostelid: req.session.userId });
+  res.render("user/notifications", { name: user.name });
+});
+
 module.exports = router;
