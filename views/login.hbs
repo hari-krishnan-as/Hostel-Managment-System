@@ -8,46 +8,60 @@
 </head>
 <body>
   <!-- Background Section -->
-  <div class="w-full min-h-screen bg-[url('images/resize.png')] bg-no-repeat bg-cover px-10 py-5 relative bg-center">
+  <div class="w-full min-h-screen bg-[url('images/resize.png')] bg-no-repeat bg-cover bg-center px-4 sm:px-10 py-5 relative">
+    
     <!-- Navbar -->
     <nav class="flex items-center">
       <a href="/">
-      <img src="images/sng.png" class="w-40 cursor-pointer" />
+        <img src="images/sng.png" class="w-28 sm:w-36 md:w-40 cursor-pointer" />
       </a>
     </nav>
+
     <!-- Login Form Section -->
-    <div class="flex justify-center items-center mt-10">
-      <div class="bg-white bg-opacity-90 p-10 rounded-3xl shadow-lg max-w-md w-full">
-        <h2 class="text-3xl font-bold text-center text-[#e4007f] mb-6">Hostel Login</h2>
-        <form action="login" method="post">
+    <div class="flex justify-center items-center mt-10 sm:mt-16 md:mt-20">
+      <div class="bg-white bg-opacity-90 p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl shadow-lg max-w-sm sm:max-w-md w-full">
+        
+        <!-- Title -->
+        <h2 class="text-2xl sm:text-3xl font-bold text-center text-[#e4007f] mb-6">
+          Hostel Login
+        </h2>
+
+        <!-- Form -->
+        <form action="login" method="post" class="space-y-5">
           <!-- Hostel ID -->
-          <div class="mb-4">
-            <label for="hostelid" class="block text-gray-700 font-semibold mb-2">Hostel ID</label>
+          <div>
+            <label for="hostelid" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">
+              Hostel ID
+            </label>
             <input
               type="text"
               id="hostelid"
               name="hostelid"
               required
               placeholder="Enter Hostel ID"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f]"
+              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
             />
           </div>
+
           <!-- Password -->
-          <div class="mb-6">
-            <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+          <div>
+            <label for="password" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
               required
               placeholder="Enter Password"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f]"
+              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
             />
           </div>
+
           <!-- Submit Button -->
           <button
             type="submit"
-            class="w-full bg-[#e4007f] hover:bg-[#b60063] text-white font-medium py-2 px-4 rounded-3xl shadow-md hover:shadow-lg transition"
+            class="w-full bg-[#e4007f] hover:bg-[#b60063] text-white font-medium py-2 sm:py-3 px-4 rounded-2xl sm:rounded-3xl shadow-md hover:shadow-lg transition text-sm sm:text-base"
           >
             Login
           </button>

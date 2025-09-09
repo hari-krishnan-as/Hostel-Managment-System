@@ -1,129 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mess Cut Leave Form</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mess Cut Leave Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body class="bg-[#16213E] text-[#FFFFFF] flex h-screen">
-    <aside class="w-64 bg-[#1A1A2E] flex flex-col justify-between py-8 border-r border-[#0F3460]">
-        <nav class="flex-1 px-8">
-            <a href="/student-dashboard" class="block">
-                <div class="text-lg font-bold text-red-500 mb-6 uppercase tracking-wide bg-[#0F3460] p-3 rounded-md text-center cursor-pointer hover:bg-[#1e4a80] transition">
-                    Dashboard
-                </div>
-            </a>
-            <ul class="space-y-4">
-                <li>
-                    <a href="/student-dashboard" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-home text-[#E94560]"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/attendance" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-user-check text-[#E94560]"></i>
-                        <span>Attendance</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/mess-cut" class="flex items-center space-x-4 p-2 pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560] text-white transition duration-200">
-                        <i class="fas fa-utensils text-[#E94560]"></i>
-                        <span>Mess Cut Leave form</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/complaints" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-exclamation-circle text-[#E94560]"></i>
-                        <span>Complaints</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/suggestions" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-lightbulb text-[#E94560]"></i>
-                        <span>Suggestions</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="mt-auto px-8">
-            <a href="/logout" class="flex items-center space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition duration-200">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="font-semibold">Log Out</span>
-            </a>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex flex-col justify-between py-6 border-b md:border-b-0 md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-6 md:px-8">
+      <a href="/student-dashboard" class="block">
+        <div class="text-lg font-bold text-red-500 mb-6 uppercase tracking-wide bg-[#0F3460] p-3 rounded-md text-center cursor-pointer hover:bg-[#1e4a80] transition">
+          Dashboard
         </div>
-    </aside>
-
-    <div class="flex flex-col flex-1">
-        <header class="w-full flex items-center justify-end py-4 px-6 bg-[#0F3460] text-white mb-8">
-            <div class="flex items-center space-x-6">
-                <!-- Notifications -->
-                <a href="/notifications" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-bell text-white text-lg cursor-pointer"></i>
-                </a>
-
-                <!-- Settings -->
-                <a href="/settings" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-cog text-white text-lg cursor-pointer"></i>
-                </a>
-
-                <!-- Profile -->
-                <a href="/profile" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-user-circle text-white text-lg cursor-pointer"></i>
-                </a>
-            </div>
-        </header>
-
-        <div class="flex-1 p-8">
-  <h1 class="text-2xl font-bold text-pink-500 mb-6 text-center">Mess Cut Leave Form</h1>
-  <div class="grid grid-cols-2 gap-8">
-
-    <!-- Mess Cut Leave Form -->
-    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-      <h2 class="text-xl font-bold text-pink-500 mb-4">Mess Cut Leave Form</h2>
-      <form action="/apply-mess-cut" method="POST">
-        <label class="block text-white mb-2">Start Date</label>
-        <input type="date" name="startDate" required 
-          class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"/>
-
-        <label class="block text-white mb-2">End Date</label>
-        <input type="date" name="endDate" required 
-          class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"/>
-
-        <button type="submit" 
-          class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
-          Apply for Mess Cut
-        </button>
-      </form>
+      </a>
+      <ul class="space-y-4">
+        <li>
+          <a href="/user/student_dashboard" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
+            <i class="fas fa-home text-[#E94560]"></i>
+            <span>Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/attendance" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
+            <i class="fas fa-user-check text-[#E94560]"></i>
+            <span>Attendance</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/mess-cut" class="flex items-center space-x-4 p-2 pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560] text-white transition duration-200">
+            <i class="fas fa-utensils text-[#E94560]"></i>
+            <span>Mess Cut Leave form</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/complaints" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
+            <i class="fas fa-exclamation-circle text-[#E94560]"></i>
+            <span>Complaints</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/suggestions" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
+            <i class="fas fa-lightbulb text-[#E94560]"></i>
+            <span>Suggestions</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="mt-auto px-6 md:px-8">
+      <a href="/logout" class="flex items-center space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition duration-200">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="font-semibold">Log Out</span>
+      </a>
     </div>
+  </aside>
 
-    <!-- Leave History -->
-    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-      <h2 class="text-xl font-bold text-pink-500 mb-4">Leave History</h2>
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-[#0F3460] text-white">
-            <th class="p-2 text-left">From</th>
-            <th class="p-2 text-left">To</th>
-            <th class="p-2 text-left">Days</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each leaves}}
-          <tr class="bg-[#0F3460] text-white border-b border-[#1B1F3B]">
-            <td class="p-2">{{this.from}}</td>
-            <td class="p-2">{{this.to}}</td>
-            <td class="p-2">{{calcDays this.from this.to}}</td>
-          </tr>
-          {{/each}}
-        </tbody>
-      </table>
+  <!-- Main Content -->
+  <div class="flex flex-col flex-1">
+    <!-- Header -->
+    <header class="w-full flex items-center justify-end py-4 px-4 md:px-6 bg-[#0F3460] text-white mb-6">
+      <div class="flex items-center space-x-6">
+        <a href="/notifications" class="hover:text-gray-400 transition-colors duration-200">
+          <i class="fas fa-bell text-white text-lg cursor-pointer"></i>
+        </a>
+        <a href="/settings" class="hover:text-gray-400 transition-colors duration-200">
+          <i class="fas fa-cog text-white text-lg cursor-pointer"></i>
+        </a>
+        <a href="/profile" class="hover:text-gray-400 transition-colors duration-200">
+          <i class="fas fa-user-circle text-white text-lg cursor-pointer"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="flex-1 p-4 md:p-8">
+      <h1 class="text-xl md:text-2xl font-bold text-pink-500 mb-6 text-center">Mess Cut Leave Form</h1>
+
+      <!-- Responsive Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+
+        <!-- Mess Cut Leave Form -->
+        <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Mess Cut Leave Form</h2>
+          <form action="/apply-mess-cut" method="POST">
+            <label class="block text-white mb-2">Start Date</label>
+            <input type="date" name="startDate" required 
+              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"/>
+
+            <label class="block text-white mb-2">End Date</label>
+            <input type="date" name="endDate" required 
+              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"/>
+
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
+              Apply for Mess Cut
+            </button>
+          </form>
+        </div>
+
+        <!-- Leave History -->
+        <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md overflow-x-auto">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Leave History</h2>
+          <table class="w-full border-collapse text-sm md:text-base">
+            <thead>
+              <tr class="bg-[#0F3460] text-white">
+                <th class="p-2 text-left">From</th>
+                <th class="p-2 text-left">To</th>
+                <th class="p-2 text-left">Days</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each leaves}}
+              <tr class="bg-[#0F3460] text-white border-b border-[#1B1F3B]">
+                <td class="p-2">{{this.from}}</td>
+                <td class="p-2">{{this.to}}</td>
+                <td class="p-2">{{calcDays this.from this.to}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
     </div>
-
   </div>
-</div>
-
 </body>
 </html>

@@ -1,434 +1,97 @@
 const express = require("express");
 const path = require("path");
-const bcrypt = require("bcrypt");
 const session = require("express-session");
-const collection = require("./config"); // Your mongoose model
+const hbs = require("hbs");
+
 const app = express();
 
-//  Convert data into JSON format
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-//  Configure session middleware
+// Session setup
 app.use(
-  session({
-    secret: "your_secret_key", // Use a strong, secret key in production
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }, // Set true if using HTTPS
-  })
+  session({
+    secret: "your_secret_key",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
 );
 
-//  Set view engine
+// Views setup
 app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "../views"));
-
-//  Middleware to serve static files
 app.use(express.static(path.join(__dirname, "../public")));
 
-const hbs = require("hbs");
-
-//  Attendance calculator function (backend use)
-function calculateAttendanceDays(registrationDate, leaves = []) {
-  const today = new Date();
-  const regDate = new Date(registrationDate);
-
-  // Total days since registration
-  const totalDays =
-    Math.floor((today - regDate) / (1000 * 60 * 60 * 24)) + 1;
-
-  // Count leave days
-  let offDays = 0;
-  leaves.forEach((leave) => {
-    const from = new Date(leave.from);
-    const to = new Date(leave.to);
-    const diff =
-      Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
-    offDays += diff;
-  });
-
-  const presentDays = totalDays - offDays;
-  return { presentDays, offDays };
-}
-
-//  Handlebars helper for calculating days between leave dates
-hbs.registerHelper("calcDays", function (from, to) {
-  const start = new Date(from);
-  const end = new Date(to);
-
-  if (isNaN(start) || isNaN(end)) {
-    return "N/A";
-  }
-
-  const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  return diff;
+// Register Handlebars helpers
+hbs.registerHelper("calcDays", (from, to) => {
+  const start = new Date(from);
+  const end = new Date(to);
+  if (isNaN(start) || isNaN(end)) return "N/A";
+  return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 });
 
-//  Middleware to protect routes
-const isAuthenticated = (req, res, next) => {
-  if (req.session.userId) {
-    next();
-  } else {
-    res.redirect("/login");
-  }
-};
+// Import routes
+const adminRoutes = require("./admin/adminRoutes");
+const userRoutes = require("./user/userRoutes");
+const collection = require("./config"); // model
+const bcrypt = require("bcrypt");
 
-// ================= ROUTES =================
+// Default routes
+app.get("/", (req, res) => res.render("home"));
+app.get("/login", (req, res) => res.render("login"));
+app.get("/request", (req, res) => res.render("request"));
 
-//  Home
-app.get("/", (req, res) => {
-  res.render("home");
+// Add a redirect for the incorrect attendance path
+app.get("/attendance", (req, res) => {
+    res.redirect("/user/attendance");
 });
 
-//  Login
-app.get("/login", (req, res) => {
-  res.render("login");
-});
-
-//  Register Request Form
-app.get("/request", (req, res) => {
-  res.render("request");
-});
-
-//settings
-app.get("/settings", (req, res) => {
-  res.render("user/settings");
-});
-
-//notifications
-app.get("/notifications", (req, res) => {
-  res.render("user/notifications");
-});
-
-// Profile Page
-app.get("/profile", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    res.render("user/profile", {
-      name: user.name,
-      department: user.department,
-      semester: user.semester,
-      hostelid: user.hostelid,
-      role: user.role,
-      registrationDate: user.registrationDate.toDateString(),
-    });
-  } catch (err) {
-    console.error(err);
-    res.send("<script>alert('Error loading profile'); window.location.href='/student-dashboard';</script>");
-  }
-});
-
-//  Logout
-app.get("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error(err);
-      return res.send(
-        "<script>alert('Logout failed'); window.location.href='/student-dashboard';</script>"
-      );
-    }
-    res.redirect("/");
-  });
-});
-
-//  Student Dashboard
-app.get("/student-dashboard", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({
-      hostelid: req.session.userId,
-    });
-    if (user) {
-      res.render("user/student_dashboard", { name: user.name });
-    } else {
-      res.redirect("/login");
-    }
-  } catch (error) {
-    console.error(error);
-    res.send(
-      "<script>alert('Something went wrong'); window.location.href='/login';</script>"
-    );
-  }
-});
-
-//  Admin Dashboard
-app.get("/admin-dashboard", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({
-      hostelid: req.session.userId,
-    });
-    if (user && user.role === "admin") {
-      res.render("admin/admin_dashboard", { name: user.name });
-    } else {
-      res.redirect("/login");
-    }
-  } catch (error) {
-    console.error(error);
-    res.send(
-      "<script>alert('Something went wrong'); window.location.href='/login';</script>"
-    );
-  }
-});
-
-//  Mess Cut Form (GET)
-app.get("/mess-cut", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    res.render("user/mess-cut", {
-      name: user.name,
-      leaves: user.leaves || []   // 👈 send leaves to hbs
-    });
-  } catch (err) {
-    console.error(err);
-    res.send("<script>alert('Error loading mess cut page'); window.location.href='/student-dashboard';</script>");
-  }
-});
-
-//complients
-app.get("/complaints", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    res.render("user/complaints", {
-      name: user.name,
-      complaints: user.complaints || []
-    });
-  } catch (err) {
-    console.error(err);
-    res.send("<script>alert('Error loading complaints page'); window.location.href='/student-dashboard';</script>");
-  }
-});
-app.post("/complaints", isAuthenticated, async (req, res) => {
-  try {
-    const { complaint } = req.body;
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    user.complaints.push({
-      text: complaint,
-      date: new Date(),
-      status: "Pending"
-    });
-
-    await user.save();
-
-    res.send("<script>alert('Complaint submitted successfully'); window.location.href='/complaints';</script>");
-  } catch (err) {
-    console.error(err);
-    res.send("<script>alert('Failed to submit complaint'); window.location.href='/complaints';</script>");
-  }
-});
-
-//  Show Suggestions Page
-app.get("/suggestions", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    res.render("user/suggestions", {
-      name: user.name,
-      suggestions: user.suggestions || []
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error loading suggestions");
-  }
-});
-
-//  Handle Suggestion Submit
-app.post("/suggestions", isAuthenticated, async (req, res) => {
-  try {
-    const { suggestion } = req.body;
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    user.suggestions.push({ text: suggestion });
-    await user.save();
-
-    res.send("<script>alert('Suggestion submitted successfully'); window.location.href='/suggestions';</script>");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error submitting suggestion");
-  }
-});
-
-
-//  Apply Mess Cut Leave (POST)
-app.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
-  try {
-    const { startDate, endDate } = req.body;
-    const user = await collection.findOne({ hostelid: req.session.userId });
-
-    if (!user) return res.redirect("/login");
-
-    // Add leave
-    user.leaves.push({
-      from: new Date(startDate),
-      to: new Date(endDate),
-    });
-
-    await user.save();
-
-    res.send(
-      "<script>alert('Mess cut leave applied successfully'); window.location.href='/mess-cut';</script>"
-    );
-  } catch (error) {
-    console.error(error);
-    res.send(
-      "<script>alert('Something went wrong'); window.location.href='/mess-cut';</script>"
-    );
-  }
-});
-
-//  Attendance
-app.get("/attendance", isAuthenticated, async (req, res) => {
-  try {
-    const user = await collection.findOne({
-      hostelid: req.session.userId,
-    });
-
-    if (user) {
-      const { presentDays, offDays } = calculateAttendanceDays(
-        user.registrationDate,
-        user.leaves || []
-      );
-
-      res.render("user/attendance", {
-        name: user.name,
-        presentDays,
-        offDays,
-        leaves: user.leaves || [], // pass leave history to frontend
-      });
-    } else {
-      res.redirect("/login");
-    }
-  } catch (error) {
-    console.error(error);
-    res.send(
-      "<script>alert('Something went wrong'); window.location.href='/login';</script>"
-    );
-  }
-});
-
-//  Register user
+// Register user
 app.post("/request", async (req, res) => {
-  const data = {
-    name: req.body.name,
-    department: req.body.department,
-    semester: req.body.semester,
-    hostelid: req.body.hostelid,
-    password: req.body.password,
-    role: req.body.role || "student",
-    registrationDate: req.body.registrationDate,
-  };
+  const data = {
+    name: req.body.name,
+    department: req.body.department,
+    semester: req.body.semester,
+    hostelid: req.body.hostelid,
+    password: req.body.password,
+    role: req.body.role || "student",
+    registrationDate: req.body.registrationDate,
+  };
 
-  const existinguser = await collection.findOne({
-    hostelid: data.hostelid,
-  });
-  if (existinguser) {
-    res.send(
-      "<script>alert('Hostelid already exists. Please try a different hostelid.'); window.location.href='/request';</script>"
-    );
-  } else {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-    data.password = hashedPassword;
-
-    await collection.create(data);
-    res.redirect("/login");
-  }
+  const existinguser = await collection.findOne({ hostelid: data.hostelid });
+  if (existinguser) {
+    res.send("<script>alert('Hostelid already exists.'); window.location.href='/request';</script>");
+  } else {
+    data.password = await bcrypt.hash(data.password, 10);
+    await collection.create(data);
+    res.redirect("/login");
+  }
 });
 
-//  Login user
+// Login user
 app.post("/login", async (req, res) => {
-  try {
-    const user = await collection.findOne({
-      hostelid: req.body.hostelid,
-    });
+  const user = await collection.findOne({ hostelid: req.body.hostelid });
+  if (!user) return res.send("<script>alert('User not found'); window.location.href='/login';</script>");
 
-    if (!user) {
-      return res.send(
-        "<script>alert('User not found'); window.location.href='/login';</script>"
-      );
-    }
+  const isMatch = await bcrypt.compare(req.body.password, user.password);
+  if (!isMatch) return res.send("<script>alert('Wrong Password'); window.location.href='/login';</script>");
 
-    const isPasswordMatch = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-
-    if (isPasswordMatch) {
-      req.session.userId = user.hostelid;
-      if (user.role === "admin") {
-        return res.redirect("/admin-dashboard");
-      } else {
-        return res.redirect("/student-dashboard");
-      }
-    } else {
-      return res.send(
-        "<script>alert('Wrong Password'); window.location.href='/login';</script>"
-      );
-    }
-  } catch (error) {
-    console.error(error);
-    return res.send(
-      "<script>alert('Something went wrong'); window.location.href='/login';</script>"
-    );
-  }
+  req.session.userId = user.hostelid;
+  if (user.role === "admin") return res.redirect("/admin/dashboard");
+  else return res.redirect("/user/dashboard");
 });
 
-//  Password Change (POST)
-app.post("/change-password", isAuthenticated, async (req, res) => {
-  try {
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      return res.send("<script>alert('All fields are required'); window.location.href='/settings';</script>");
-    }
-
-    if (newPassword !== confirmPassword) {
-      return res.send("<script>alert('New passwords do not match'); window.location.href='/settings';</script>");
-    }
-
-    const user = await collection.findOne({ hostelid: req.session.userId });
-    if (!user) {
-      return res.redirect("/login");
-    }
-
-    // Verify old password
-    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isPasswordMatch) {
-      return res.send("<script>alert('Old password is incorrect'); window.location.href='/settings';</script>");
-    }
-
-    // Hash new password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password in DB
-    user.password = hashedPassword;
-    await user.save();
-
-    return res.send("<script>alert('Password changed successfully'); window.location.href='/settings';</script>");
-  } catch (error) {
-    console.error(error);
-    return res.send("<script>alert('Something went wrong'); window.location.href='/settings';</script>");
-  }
+// Logout
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/"));
 });
 
+// Mount routes
+app.use("/admin", adminRoutes);
+app.use("/user", userRoutes);
 
-//  Server listen
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Server running on port: ${port}`);
-});
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

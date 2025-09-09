@@ -48,7 +48,6 @@ const loginSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-
   // ✅ Leave tracking
   leaves: [
     {
@@ -56,7 +55,6 @@ const loginSchema = new mongoose.Schema({
       to: { type: Date, required: true }
     }
   ],
-
   // ✅ Complaints
   complaints: [
     {
@@ -65,7 +63,6 @@ const loginSchema = new mongoose.Schema({
       status: { type: String, default: "Pending" }
     }
   ],
-
   // ✅ Suggestions
   suggestions: [
     {

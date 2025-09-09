@@ -1,129 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Complaints</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body class="bg-[#16213E] text-[#FFFFFF] flex h-screen">
-    <aside class="w-64 bg-[#1A1A2E] flex flex-col justify-between py-8 border-r border-[#0F3460]">
-        <nav class="flex-1 px-8">
-            <a href="/student-dashboard" class="block">
-                <div class="text-lg font-bold text-red-500 mb-6 uppercase tracking-wide bg-[#0F3460] p-3 rounded-md text-center cursor-pointer hover:bg-[#1e4a80] transition">
-                    Dashboard
-                </div>
-            </a>
-            <ul class="space-y-4">
-                <li>
-                    <a href="/student-dashboard" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-home text-[#E94560]"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/attendance" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-user-check text-[#E94560]"></i>
-                        <span>Attendance</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/mess-cut" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-utensils text-[#E94560]"></i>
-                        <span>Mess Cut Leave form</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/complaints" class="flex items-center space-x-4 p-2 pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560] text-white transition duration-200">
-                        <i class="fas fa-exclamation-circle text-[#E94560]"></i>
-                        <span>Complaints</span>
-                    </a>
-                </li>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
+  
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-4 md:px-8">
+      <a href="/student-dashboard" class="block">
+        <div class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center cursor-pointer hover:bg-[#1e4a80] transition">
+          Dashboard
+        </div>
+      </a>
+      <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
         <li>
-          <a href="/suggestions" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-            <i class="fas fa-lightbulb text-[#E94560]"></i>
-                  <span>Suggestions</span>
+          <a href="/user/student_dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560]">
+            <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/attendance" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560]">
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Attendance</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/mess-cut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560]">
+            <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Mess Cut Leave</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/complaints" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+            <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">Complaints</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/suggestions" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560]">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Suggestions</span>
           </a>
         </li>
       </ul>
     </nav>
-    <div class="mt-auto px-8">
-      <a href="/logout" class="flex items-center space-x-4 p-2 rounded-md hover:text-[#E94560]">
-        <i class="fas fa-sign-out-alt"></i><span class="font-semibold">Log Out</span>
+    <div class="px-4 md:px-8 mt-2 md:mt-auto">
+      <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md hover:text-[#E94560]">
+        <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
       </a>
     </div>
   </aside>
+
+  <!-- Main Content -->
   <div class="flex flex-col flex-1">
-        <header class="w-full flex items-center justify-end py-4 px-6 bg-[#0F3460] text-white mb-8">
-            <div class="flex items-center space-x-6">
-                <!-- Notifications -->
-                <a href="/notifications" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-bell text-white text-lg cursor-pointer"></i>
-                </a>
-
-                <!-- Settings -->
-                <a href="/settings" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-cog text-white text-lg cursor-pointer"></i>
-                </a>
-
-                <!-- Profile -->
-                <a href="/profile" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-user-circle text-white text-lg cursor-pointer"></i>
-                </a>
-            </div>
-        </header>
-
-  <!-- Main -->
-  <div class="flex-1 p-8">
-    <h1 class="text-2xl font-bold text-pink-500 mb-6 text-center">Complaints</h1>
-
-    <div class="grid grid-cols-2 gap-8">
-      
-      <!-- Complaint Form -->
-      <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-        <h2 class="text-xl font-bold text-pink-500 mb-4">Submit Complaint</h2>
-        <form action="/complaints" method="POST">
-          <textarea 
-            name="complaint" 
-            placeholder="Enter your complaint..." 
-            required
-            class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
-          <button type="submit" 
-            class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
-            Submit
-          </button>
-        </form>
+    
+    <!-- Header -->
+    <header class="w-full flex items-center justify-end py-3 md:py-4 px-4 md:px-6 bg-[#0F3460] text-white">
+      <div class="flex items-center space-x-4 md:space-x-6">
+        <a href="/notifications" class="hover:text-gray-400"><i class="fas fa-bell text-lg"></i></a>
+        <a href="/settings" class="hover:text-gray-400"><i class="fas fa-cog text-lg"></i></a>
+        <a href="/profile" class="hover:text-gray-400"><i class="fas fa-user-circle text-lg"></i></a>
       </div>
+    </header>
 
-      <!-- Complaint History -->
-      <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-        <h2 class="text-xl font-bold text-pink-500 mb-4">Complaint History</h2>
+    <!-- Complaints Section -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+      <h1 class="text-xl md:text-2xl font-bold text-pink-500 mb-4 md:mb-6 text-center">Complaints</h1>
 
-        {{#if complaints.length}}
-        <table class="w-full text-white border-collapse">
-          <thead>
-            <tr class="bg-[#0F3460]">
-              <th class="p-2">Complaint</th>
-              <th class="p-2">Date</th>
-              <th class="p-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each complaints}}
-            <tr class="border-b border-gray-600">
-              <td class="p-2">{{this.text}}</td>
-              <td class="p-2">{{this.date}}</td>
-              <td class="p-2">{{this.status}}</td>
-            </tr>
-            {{/each}}
-          </tbody>
-        </table>
-        {{else}}
-        <p class="text-gray-400">No complaints submitted yet.</p>
-        {{/if}}
+      <!-- Responsive Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
+        <!-- Complaint Form -->
+        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-3 md:mb-4">Submit Complaint</h2>
+          <form action="/complaints" method="POST">
+            <textarea 
+              name="complaint" 
+              placeholder="Enter your complaint..." 
+              required
+              class="w-full p-2 md:p-3 rounded-md bg-[#0F3460] text-white mb-3 md:mb-4 text-sm md:text-base"></textarea>
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white py-2 rounded-md hover:bg-pink-600 text-sm md:text-base">
+              Submit
+            </button>
+          </form>
+        </div>
+
+        <!-- Complaint History -->
+        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md overflow-x-auto">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-3 md:mb-4">Complaint History</h2>
+          
+          {{#if complaints.length}}
+          <table class="w-full text-white border-collapse text-xs sm:text-sm md:text-base">
+            <thead>
+              <tr class="bg-[#0F3460]">
+                <th class="p-2">Complaint</th>
+                <th class="p-2">Date</th>
+                <th class="p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each complaints}}
+              <tr class="border-b border-gray-600">
+                <td class="p-2">{{this.text}}</td>
+                <td class="p-2">{{this.date}}</td>
+                <td class="p-2">{{this.status}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+          {{else}}
+          <p class="text-gray-400 text-xs sm:text-sm md:text-base">No complaints submitted yet.</p>
+          {{/if}}
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </body>
 </html>
