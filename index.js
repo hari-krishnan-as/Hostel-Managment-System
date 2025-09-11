@@ -7,7 +7,7 @@ require("dotenv").config();   // ✅ Load env variables
 
 // Import DB connection
 const connectDB = require("./config"); 
-const User = require("./models/User");  // ✅ schema/model
+const User = require("./models/User.js");  // ✅ schema/model
 
 // Import routes
 const adminRoutes = require("./src/admin/adminRoutes.js");
