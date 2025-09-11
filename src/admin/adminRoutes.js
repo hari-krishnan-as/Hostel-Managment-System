@@ -1,5 +1,5 @@
 const express = require("express");
-const collection = require("../config");
+const collection = require("../../config.js");
 const router = express.Router();
 
 // Middleware: check login

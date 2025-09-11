@@ -1,115 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suggestions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body class="bg-[#16213E] text-[#FFFFFF] flex h-screen">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-[#1A1A2E] flex flex-col justify-between py-8 border-r border-[#0F3460]">
-        <nav class="flex-1 px-8">
-            <h2 class="text-lg font-bold text-red-500 mb-6 uppercase tracking-wide bg-[#0F3460] p-3 rounded-md text-center">
-                Dashboard
-            </h2>
-            <ul class="space-y-4">
-                <li>
-                    <a href="/user/dashboard" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-home text-[#E94560]"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/attendance" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-user-check text-[#E94560]"></i>
-                        <span>Attendance</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/mess-cut" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-utensils text-[#E94560]"></i>
-                        <span>Mess Cut Leave form</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/complaints" class="flex items-center space-x-4 p-2 pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition duration-200">
-                        <i class="fas fa-exclamation-circle text-[#E94560]"></i>
-                        <span>Complaints</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/suggestions" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
-                        <i class="fas fa-lightbulb text-[#E94560]"></i>
-                        <span>Suggestions</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="mt-auto px-8">
-            <a href="/logout" class="flex items-center space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition duration-200">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="font-semibold">Log Out</span>
-            </a>
-        </div>
-    </aside>
-     <div class="flex flex-col flex-1">
-        <header class="w-full flex items-center justify-end py-4 px-6 bg-[#0F3460] text-white mb-8">
-            <div class="flex items-center space-x-6">
-                <!-- Notifications -->
-                <a href="/user/notifications" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-bell text-white text-lg cursor-pointer"></i>
-                </a>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
 
-                <!-- Settings -->
-                <a href="/user/settings" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-cog text-white text-lg cursor-pointer"></i>
-                </a>
-
-                <!-- Profile -->
-                <a href="/user/profile" class="hover:text-gray-400 transition-colors duration-200">
-                    <i class="fas fa-user-circle text-white text-lg cursor-pointer"></i>
-                </a>
-            </div>
-        </header>
-        
-    <div class="flex-1 p-8"><div class="flex-1 p-8">
-  <h1 class="text-2xl font-bold text-pink-500 mb-6 text-center">Suggestions</h1>
-
-  <div class="grid grid-cols-2 gap-8">
-
-    <!-- Suggestion Form -->
-    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-      <h2 class="text-xl font-bold text-pink-500 mb-4">Submit Suggestion</h2>
-      <form action="/suggestions" method="POST">
-        <textarea 
-          name="suggestion" 
-          placeholder="Enter your suggestion..." 
-          required
-          class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
-        <button type="submit" 
-          class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
-          Submit
-        </button>
-      </form>
-    </div>
-
-    <!-- Suggestions List -->
-    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-      <h2 class="text-xl font-bold text-pink-500 mb-4">All Suggestions</h2>
-      <ul class="space-y-3">
-        {{#each suggestions}}
-          <li class="p-3 rounded-md bg-[#0F3460]">
-            <p class="text-whitw-500 font-semibold">{{this.text}}</p>
-          </li>
-        {{/each}}
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-4 md:px-8">
+      <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
+        Dashboard
+      </h2>
+      <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
+        <li>
+          <a href="/user/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/attendance" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Attendance</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/mess-cut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Mess Cut Leave</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/complaints" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">Complaints</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/suggestions" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Suggestions</span>
+          </a>
+        </li>
       </ul>
+    </nav>
+    <div class="px-4 md:px-8 mt-2 md:mt-auto">
+      <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
+        <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
+      </a>
     </div>
+  </aside>
 
+  <!-- Main Content -->
+  <div class="flex flex-col flex-1">
+    <!-- Header -->
+    <header class="w-full flex items-center justify-end py-3 md:py-4 px-4 md:px-6 bg-[#0F3460] text-white">
+      <div class="flex items-center space-x-4 md:space-x-6">
+        <a href="/user/notifications" class="hover:text-gray-400 transition">
+          <i class="fas fa-bell text-lg"></i>
+        </a>
+        <a href="/user/settings" class="hover:text-gray-400 transition">
+          <i class="fas fa-cog text-lg"></i>
+        </a>
+        <a href="/user/profile" class="hover:text-gray-400 transition">
+          <i class="fas fa-user-circle text-lg"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- Suggestions Page -->
+    <main class="flex-1 p-4 md:p-8">
+      <h1 class="text-xl md:text-2xl font-bold text-pink-500 mb-6 text-center">Suggestions</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <!-- Suggestion Form -->
+        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Suggestion</h2>
+          <form action="/suggestions" method="POST">
+            <textarea 
+              name="suggestion" 
+              placeholder="Enter your suggestion..." 
+              required
+              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
+              Submit
+            </button>
+          </form>
+        </div>
+
+        <!-- Suggestions List -->
+        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">All Suggestions</h2>
+          <ul class="space-y-3">
+            {{#each suggestions}}
+              <li class="p-3 rounded-md bg-[#0F3460]">
+                <p class="text-white font-semibold">{{this.text}}</p>
+              </li>
+            {{/each}}
+          </ul>
+        </div>
+      </div>
+    </main>
   </div>
-</div>
 
-
-        </body>
+</body>
 </html>
