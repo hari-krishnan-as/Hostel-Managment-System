@@ -11,7 +11,7 @@ const User = require("./models/User.js");  // ✅ schema/model
 
 // Import routes
 const adminRoutes = require("./src/admin/adminRoutes.js");
-const userRoutes = require("./src/user/userRoutes.js");
+const userRoutes = require("./src/user/userRoutes.js"); 
 
 const app = express();
 
@@ -90,6 +90,11 @@ app.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(req.body.password, user.password);
     if (!isMatch) {
       return res.send("<script>alert('Wrong Password'); window.location.href='/login';</script>");
+    }
+
+    // ✅ New check: block login if the user is not approved
+    if (!user.isApproved) {
+      return res.send("<script>alert('Your account is pending admin approval.'); window.location.href='/login';</script>");
     }
 
     req.session.userId = user.hostelid;

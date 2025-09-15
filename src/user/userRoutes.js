@@ -27,7 +27,6 @@ function calculateAttendanceDays(registrationDate, leaves = []) {
   const presentDays = totalDays - offDays;
   return { presentDays, offDays };
 }
-
 // ---------------- Routes ----------------
 
 // Dashboard

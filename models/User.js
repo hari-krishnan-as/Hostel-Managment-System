@@ -8,6 +8,7 @@ const loginSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ["student", "admin"], default: "student" },
   registrationDate: { type: Date, required: true },
+  isApproved: { type: Boolean, default: false },
 
   // ✅ Leave tracking
   leaves: [
@@ -31,10 +32,11 @@ const loginSchema = new mongoose.Schema({
     {
       text: { type: String, required: true, trim: true }
     }
-  ]
+  ],
+
 });
 
-const User = mongoose.models.users || mongoose.model("users", loginSchema);
+const User = mongoose.models.user || mongoose.model("user", loginSchema);
 module.exports = User;
 
 
