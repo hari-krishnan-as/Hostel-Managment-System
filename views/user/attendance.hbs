@@ -82,7 +82,8 @@
           </div>
           <p class="text-gray-200 mt-4 text-xs sm:text-sm md:text-base text-center">
             Present: <span class="text-green-400 font-bold">{{presentDays}}</span> | 
-            Mess cut: <span class="text-red-400 font-bold">{{offDays}}</span>
+            Mess Cut (Approved): <span class="text-red-400 font-bold">{{messCutDays}}</span>
+            Waiting for Approval: <span class="text-yellow-400 font-bold">{{waitingApprovalDays}}</span>
           </p>
         </div>
       </div>
@@ -90,27 +91,41 @@
   </div>
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const ctx = document.getElementById("attendanceChart").getContext("2d");
-    new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: ["Present", "Mess Cut"],
-        datasets: [{
-          data: [{{presentDays}}, {{offDays}}],
-          backgroundColor: ["#34D399", "#F87171"],
-          borderWidth: 0
-        }]
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const ctx = document.getElementById("attendanceChart").getContext("2d");
+
+  const present = Number("{{presentDays}}");
+  const messCut = Number("{{messCutDays}}");
+  const waiting = Number("{{waitingApprovalDays}}");
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Present", "Mess Cut (Approved)", "Waiting for Approval"],
+      datasets: [{
+        data: [present, messCut, waiting],
+        backgroundColor: ["#34D399", "#F87171", "#FBBF24"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: { color: "#fff" }
+        }
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false }
-        },
-        cutout: "70%"
-      }
-    });
-  </script>
+      cutout: "70%"
+    }
+  });
+</script>
+
+
 </body>
 </html>

@@ -16,17 +16,23 @@ function calculateAttendanceDays(registrationDate, leaves = []) {
 
   const totalDays = Math.floor((today - regDate) / (1000 * 60 * 60 * 24)) + 1;
 
-  let offDays = 0;
+  let messCutDays = 0;
+  let waitingApprovalDays = 0;
+
   leaves.forEach((leave) => {
     const from = new Date(leave.from);
     const to = new Date(leave.to);
     const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
-    offDays += diff;
+
+    if (leave.approved) messCutDays += diff;     // ✅ Approved → mess cut
+    else waitingApprovalDays += diff;            // ✅ Pending → waiting approval
   });
 
-  const presentDays = totalDays - offDays;
-  return { presentDays, offDays };
+  const presentDays = totalDays - messCutDays;   // only subtract approved leaves
+
+  return { presentDays, messCutDays, waitingApprovalDays };
 }
+
 // ---------------- Routes ----------------
 
 // Dashboard
@@ -49,37 +55,41 @@ router.get("/attendance", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
 
-  const { presentDays, offDays } = calculateAttendanceDays(
+  const { presentDays, messCutDays, waitingApprovalDays } = calculateAttendanceDays(
     foundUser.registrationDate,
     foundUser.leaves || []
   );
 
   res.render("user/attendance", {
-    user: foundUser,
+    name: foundUser.name,
     presentDays,
-    offDays,
+    messCutDays,
+    waitingApprovalDays,
   });
 });
 
-// Mess Cut
-router.get("/mess-cut", isAuthenticated, async (req, res) => {
-  const foundUser = await User.findOne({ hostelid: req.session.userId });
-  if (!foundUser) return res.redirect("/login");
-
-  res.render("user/mess-cut", { user: foundUser });
-});
-
+// Apply Mess Cut
 router.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
   const { startDate, endDate } = req.body;
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
 
-  foundUser.leaves.push({ from: new Date(startDate), to: new Date(endDate) });
+  foundUser.leaves.push({
+    from: new Date(startDate),
+    to: new Date(endDate),
+    approved: false,    // ✅ ensure new requests are pending
+  });
   await foundUser.save();
 
-  res.send(
-    "<script>alert('Mess cut leave applied successfully'); window.location.href='/user/mess-cut';</script>"
-  );
+  res.redirect("/user/mess-cut");  // ✅ redirect to attendance → chart refreshes
+});
+
+// Mess Cut History
+router.get("/mess-cut", isAuthenticated, async (req, res) => {
+  const foundUser = await User.findOne({ hostelid: req.session.userId });
+  if (!foundUser) return res.redirect("/login");
+
+  res.render("user/mess-cut", { user: foundUser, messCuts: foundUser.leaves });
 });
 
 // Complaints
@@ -125,24 +135,18 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
 
   if (!foundUser) return res.redirect("/login");
   if (newPassword !== confirmPassword) {
-    return res.send(
-      "<script>alert('Passwords do not match'); window.location.href='/user/settings';</script>"
-    );
+    return res.send("<script>alert('Passwords do not match'); window.location.href='/user/settings';</script>");
   }
 
   const isPasswordMatch = await bcrypt.compare(oldPassword, foundUser.password);
   if (!isPasswordMatch) {
-    return res.send(
-      "<script>alert('Old password is incorrect'); window.location.href='/user/settings';</script>"
-    );
+    return res.send("<script>alert('Old password is incorrect'); window.location.href='/user/settings';</script>");
   }
 
   foundUser.password = await bcrypt.hash(newPassword, 10);
   await foundUser.save();
 
-  res.send(
-    "<script>alert('Password changed successfully'); window.location.href='/user/settings';</script>"
-  );
+  res.send("<script>alert('Password changed successfully'); window.location.href='/user/settings';</script>");
 });
 
 // Notifications
