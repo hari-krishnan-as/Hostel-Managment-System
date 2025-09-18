@@ -83,7 +83,6 @@ router.get("/approve-messcut", isAuthenticated, async (req, res) => {
 });
 
 // Approve a specific mess cut request
-// Approve a specific mess cut request
 router.post("/approve-messcut/:id", isAuthenticated, async (req, res) => {
   try {
     const admin = await User.findOne({ hostelid: req.session.userId });
@@ -101,6 +100,49 @@ router.post("/approve-messcut/:id", isAuthenticated, async (req, res) => {
   }
 });
 
+// View all complaints
+router.get("/view-complaint", async (req, res) => {
+  try {
+    const users = await User.find(
+      { "complaints.0": { $exists: true } },
+      { name: 1, hostelid: 1, complaints: 1 }
+    );
+    res.render("admin/view-complaint", { users });
+  } catch (err) {
+    console.error("Error fetching complaints:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
+// ✅ Update complaint status
+router.post("/update-complaint/:userId/:complaintIndex", async (req, res) => {
+  try {
+    const { userId, complaintIndex } = req.params;
+    const { status } = req.body;
+
+    // Fetch the user
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("User not found");
+      return res.status(404).send("User not found");
+    }
+
+    // Check if complaint index exists
+    if (!user.complaints[complaintIndex]) {
+      console.error("Complaint not found");
+      return res.status(404).send("Complaint not found");
+    }
+
+    // Update complaint status
+    user.complaints[complaintIndex].status = status;
+    await user.save();
+
+    console.log(`Updated complaint ${complaintIndex} for user ${userId} -> ${status}`);
+    res.redirect("/admin/view-complaint");
+  } catch (err) {
+    console.error("Error updating complaint:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 module.exports = router;

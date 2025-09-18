@@ -92,22 +92,55 @@ router.get("/mess-cut", isAuthenticated, async (req, res) => {
   res.render("user/mess-cut", { user: foundUser, messCuts: foundUser.leaves });
 });
 
-// Complaints
+// complaint routes
+
+// ✅ View complaints
 router.get("/complaints", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
-  res.render("user/complaints", { user: foundUser });
+  if (!foundUser) return res.redirect("/login");
+
+  res.render("user/complaints", { 
+    user: foundUser, 
+    complaints: foundUser.complaints
+  });
 });
 
+// ✅ Add complaint
 router.post("/complaints", isAuthenticated, async (req, res) => {
   const { complaint } = req.body;
   const foundUser = await User.findOne({ hostelid: req.session.userId });
-  foundUser.complaints.push({ text: complaint, date: new Date(), status: "Pending" });
+
+  if (!foundUser) return res.redirect("/login");
+
+  foundUser.complaints.push({
+    text: complaint,
+    date: new Date(),
+    status: "Pending"
+  });
+
   await foundUser.save();
 
-  res.send(
-    "<script>alert('Complaint submitted successfully'); window.location.href='/user/complaints';</script>"
-  );
+  res.redirect("/user/complaints"); // redirect instead of render (avoids duplicate form resubmission)
 });
+
+// ✅ Delete complaint
+router.post("/delete-complaint/:hostelid/:complaintId", isAuthenticated, async (req, res) => {
+  const { hostelid, complaintId } = req.params;
+
+  try {
+    await User.findOneAndUpdate(
+      { hostelid },
+      { $pull: { complaints: { _id: complaintId } } }
+    );
+
+    res.redirect("/user/complaints");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+
 
 // Suggestions
 router.get("/suggestions", isAuthenticated, async (req, res) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Approve Mess Cut Leave</title>
+  <title>Complaints</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -32,12 +32,12 @@
           </a>
         </li>
         <li>
-          <a href="/admin/approve-messcut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+          <a href="/admin/approve-messcut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
             <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Approve Mess Cut Leave</span>
           </a>
         </li>
         <li>
-          <a href="view-complaint" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+          <a href="view-complaint" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
             <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">View Complaints</span>
           </a>
         </li>
@@ -69,43 +69,69 @@
       </div>
     </header>
 
-    <!-- Table -->
-    <main class="flex-1 p-6">
-      {{#if messCuts.length}}
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-[#1A1A2E] rounded-lg shadow-md">
-            <thead>
-              <tr class="bg-[#0F3460] text-left">
-                <th class="p-3">Name</th>
-                <th class="p-3">Hostel ID</th>
-                <th class="p-3">From</th>
-                <th class="p-3">To</th>
-                <th class="p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each messCuts}}
-                <tr class="border-b border-[#0F3460] hover:bg-[#222A49]">
-                  <td class="p-3">{{this.name}}</td>
-                  <td class="p-3">{{this.hostelid}}</td>
-                  <td class="p-3">{{this.from}}</td>
-                  <td class="p-3">{{this.to}}</td>
-                  <td class="p-3">
-                    <form action="/admin/approve-messcut/{{this._id}}" method="POST">
-                      <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                        Approve
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        </div>
+   <!-- Complaint Management -->
+<main class="p-4 md:p-8 flex-1">
+  <h1 class="text-xl md:text-3xl font-bold text-pink-500 mb-6 text-center">View Complaints</h1>
+
+  {{#each users}}
+    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md mb-6">
+      <h2 class="text-lg font-bold text-white mb-3">{{this.name}} ({{this.hostelid}})</h2>
+      
+      {{#if this.complaints.length}}
+        <ul class="space-y-3">
+          {{#each this.complaints}}
+            <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md">
+              <p class="text-white">{{this.text}}</p>
+
+              <!-- ✅ Use complaint._id instead of @index -->
+              <form action="/admin/update-complaint/{{../_id}}/{{@index}}" method="POST">
+                <select 
+                  name="status" 
+                  class="status-select px-2 py-1 rounded-md text-white font-semibold mr-2"
+                >
+                  <option value="Pending"  {{#if (eq this.status "Pending")}}selected{{/if}}>Pending</option>
+                  <option value="Resolved" {{#if (eq this.status "Resolved")}}selected{{/if}}>Resolved</option>
+                  <option value="Rejected" {{#if (eq this.status "Rejected")}}selected{{/if}}>Rejected</option>
+                </select>
+
+                <button 
+                  type="submit" 
+                  class="bg-pink-600 text-white px-3 py-1 rounded-md hover:bg-pink-700 transition"
+                >
+                  Update
+                </button>
+              </form>
+            </li>
+          {{/each}}
+        </ul>
       {{else}}
-        <p class="text-center text-gray-400">No pending mess cut requests.</p>
+        <p class="text-gray-400">No complaints available.</p>
       {{/if}}
-    </main>
-  </div>
+    </div>
+  {{/each}}
+</main>
+</div>
+
+<script>
+  function updateSelectBg(select) {
+    // Reset background colors
+    select.classList.remove("bg-yellow-500", "bg-green-600", "bg-red-600");
+
+    if (select.value === "Pending") {
+      select.classList.add("bg-yellow-500");
+    } else if (select.value === "Resolved") {
+      select.classList.add("bg-green-600");
+    } else if (select.value === "Rejected") {
+      select.classList.add("bg-red-600");
+    }
+  }
+
+  // Apply styling on load + on change
+  document.querySelectorAll(".status-select").forEach(select => {
+    updateSelectBg(select);
+    select.addEventListener("change", () => updateSelectBg(select));
+  });
+</script>
+
 </body>
 </html>

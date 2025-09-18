@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const hbs = require("hbs");
+const hbs = require("hbs");   // ✅ Only keep this once
 const bcrypt = require("bcrypt");
 require("dotenv").config();   // ✅ Load env variables
 
@@ -37,12 +37,16 @@ app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Register Handlebars helpers
+// ✅ Register Handlebars helpers
 hbs.registerHelper("calcDays", (from, to) => {
   const start = new Date(from);
   const end = new Date(to);
   if (isNaN(start) || isNaN(end)) return "N/A";
   return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+});
+
+hbs.registerHelper("eq", function (a, b) {
+  return a === b;
 });
 
 // Default routes
