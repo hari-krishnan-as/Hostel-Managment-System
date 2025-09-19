@@ -140,24 +140,39 @@ router.post("/delete-complaint/:hostelid/:complaintId", isAuthenticated, async (
   }
 });
 
-
-
-// Suggestions
+// Show user suggestions
 router.get("/suggestions", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
-  res.render("user/suggestions", { user: foundUser });
+  res.render("user/suggestions", {
+    user: foundUser,
+    suggestions: foundUser.suggestions,
+  });
 });
 
+// Add a suggestion
 router.post("/suggestions", isAuthenticated, async (req, res) => {
   const { suggestion } = req.body;
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   foundUser.suggestions.push({ text: suggestion });
   await foundUser.save();
 
-  res.send(
-    "<script>alert('Suggestion submitted successfully'); window.location.href='/user/suggestions';</script>"
-  );
+  res.redirect("/user/suggestions");
 });
+
+// ✅ Delete a suggestion (removes from DB → disappears from user & admin)
+router.post("/delete-suggestion/:id", isAuthenticated, async (req, res) => {
+  const foundUser = await User.findOne({ hostelid: req.session.userId });
+
+  // Remove by MongoDB _id
+  foundUser.suggestions = foundUser.suggestions.filter(
+    (s) => s._id.toString() !== req.params.id
+  );
+
+  await foundUser.save();
+  res.redirect("/user/suggestions");
+});
+
+
 
 // Settings (Change Password)
 router.get("/settings", isAuthenticated, (req, res) => res.render("user/settings"));
@@ -181,6 +196,8 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
 
   res.send("<script>alert('Password changed successfully'); window.location.href='/user/settings';</script>");
 });
+
+
 
 // Notifications
 router.get("/notifications", isAuthenticated, async (req, res) => {

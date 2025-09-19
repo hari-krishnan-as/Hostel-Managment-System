@@ -114,30 +114,23 @@ router.get("/view-complaint", async (req, res) => {
   }
 });
 
-// ✅ Update complaint status
-router.post("/update-complaint/:userId/:complaintIndex", async (req, res) => {
+router.post("/update-complaint/:userId/:complaintId", async (req, res) => {
   try {
-    const { userId, complaintIndex } = req.params;
+    const { userId, complaintId } = req.params;
     const { status } = req.body;
 
-    // Fetch the user
-    const user = await User.findById(userId);
-    if (!user) {
-      console.error("User not found");
-      return res.status(404).send("User not found");
-    }
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, "complaints._id": complaintId },
+      { $set: { "complaints.$.status": status } },
+      { new: true }
+    );
 
-    // Check if complaint index exists
-    if (!user.complaints[complaintIndex]) {
+    if (!updatedUser) {
       console.error("Complaint not found");
       return res.status(404).send("Complaint not found");
     }
 
-    // Update complaint status
-    user.complaints[complaintIndex].status = status;
-    await user.save();
-
-    console.log(`Updated complaint ${complaintIndex} for user ${userId} -> ${status}`);
+    console.log(`Complaint ${complaintId} updated to ${status}`);
     res.redirect("/admin/view-complaint");
   } catch (err) {
     console.error("Error updating complaint:", err.message);
@@ -145,4 +138,13 @@ router.post("/update-complaint/:userId/:complaintIndex", async (req, res) => {
   }
 });
 
+// View all suggestions from all users
+router.get("/view-suggestion", isAuthenticated, async (req, res) => {
+  const usersWithSuggestions = await User.find(
+    { "suggestions.0": { $exists: true } }, // only users with at least 1 suggestion
+    "name hostelid suggestions"
+  );
+
+  res.render("admin/view-suggestion", { users: usersWithSuggestions });
+});
 module.exports = router;

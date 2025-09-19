@@ -72,36 +72,43 @@
       <h1 class="text-xl md:text-2xl font-bold text-pink-500 mb-6 text-center">Suggestions</h1>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        <!-- Suggestion Form -->
-        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
-          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Suggestion</h2>
-          <form action="/suggestions" method="POST">
-            <textarea 
-              name="suggestion" 
-              placeholder="Enter your suggestion..." 
-              required
-              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
-            <button type="submit" 
-              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600">
-              Submit
-            </button>
-          </form>
-        </div>
+        <!-- Submit Suggestion Form -->
+<div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md mb-6">
+  <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Suggestion</h2>
 
-        <!-- Suggestions List -->
-        <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
-          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">All Suggestions</h2>
-          <ul class="space-y-3">
-            {{#each suggestions}}
-              <li class="p-3 rounded-md bg-[#0F3460]">
-                <p class="text-white font-semibold">{{this.text}}</p>
-              </li>
-            {{/each}}
-          </ul>
-        </div>
-      </div>
-    </main>
-  </div>
+  <form action="/user/suggestions" method="POST" class="space-y-4">
+    <textarea 
+      name="suggestion" 
+      class="w-full p-3 rounded-md bg-[#0F3460] text-white" 
+      placeholder="Enter your suggestion here..."
+      required></textarea>
+
+    <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded-md font-semibold">
+      Submit
+    </button>
+  </form>
+</div>
+
+
+<!-- Suggestions List -->
+<div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
+  <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">My Suggestions</h2>
+
+  {{#if suggestions.length}}
+    <ul class="space-y-3">
+      {{#each suggestions}}
+        <li class="p-3 rounded-md bg-[#0F3460] flex justify-between items-center">
+          <p class="text-white font-semibold">{{this.text}}</p>
+          <form action="/user/delete-suggestion/{{this._id}}" method="POST" onsubmit="return confirm('Delete this suggestion?')">
+            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded-md">Delete</button>
+          </form>
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p class="text-gray-400">No suggestions yet.</p>
+  {{/if}}
+</div>
 
 </body>
 </html>
