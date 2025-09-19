@@ -53,6 +53,8 @@ hbs.registerHelper("eq", function (a, b) {
 app.get("/", (req, res) => res.render("home"));
 app.get("/login", (req, res) => res.render("login"));
 app.get("/request", (req, res) => res.render("request"));
+app.get("/about", (req, res) => res.render("about"));
+app.get("/contact", (req, res) => res.render("contact"));
 
 // Fix incorrect attendance path
 app.get("/attendance", (req, res) => res.redirect("/user/attendance"));
