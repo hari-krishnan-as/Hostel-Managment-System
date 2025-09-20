@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../../models/User");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const Notification = require("../../models/notification");
 
 // ---------------- Middleware ----------------
 const isAuthenticated = (req, res, next) => {
@@ -199,10 +200,14 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
 
 
 
-// Notifications
-router.get("/notifications", isAuthenticated, async (req, res) => {
-  const foundUser = await User.findOne({ hostelid: req.session.userId });
-  res.render("user/notifications", { user: foundUser });
+// Show all notifications for users
+router.get("/notifications", async (req, res) => {
+  try {
+    const notifications = await Notification.find().sort({ _id: -1 });
+    res.render("user/notifications", { notifications });
+  } catch (err) {
+    res.status(500).send("Error loading notifications");
+  }
 });
 
 module.exports = router;

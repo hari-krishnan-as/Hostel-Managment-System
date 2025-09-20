@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../../models/User"); // ✅ import User model
 const router = express.Router();
+const Notification = require("../../models/notification.js");
 
 // Middleware: check login
 const isAuthenticated = (req, res, next) => {
@@ -147,4 +148,26 @@ router.get("/view-suggestion", isAuthenticated, async (req, res) => {
 
   res.render("admin/view-suggestion", { users: usersWithSuggestions });
 });
+
+// GET Give Notification page
+router.get("/give-notification", async (req, res) => {
+  try {
+    const notifications = await Notification.find().sort({ _id: -1 }); 
+    res.render("admin/give-notification", { notifications });
+  } catch (err) {
+    res.status(500).send("Error loading notifications");
+  }
+});
+
+// POST new notification
+router.post("/give-notification", async (req, res) => {
+  try {
+    const { message } = req.body;
+    await Notification.create({ message });
+    res.redirect("/admin/give-notification"); // reload page → history updates
+  } catch (err) {
+    res.status(500).send("Error saving notification");
+  }
+});
+
 module.exports = router;
