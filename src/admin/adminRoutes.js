@@ -170,4 +170,14 @@ router.post("/give-notification", async (req, res) => {
   }
 });
 
+// Delete a notification by ID
+router.post("/delete-notification/:id", async (req, res) => {
+  try {
+    await Notification.findByIdAndDelete(req.params.id);
+    res.redirect("/admin/give-notification"); // reload the page after delete
+  } catch (err) {
+    res.status(500).send("Error deleting notification");
+  }
+});
+
 module.exports = router;
