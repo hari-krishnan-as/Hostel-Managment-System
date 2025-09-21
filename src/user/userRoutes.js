@@ -11,27 +11,62 @@ const isAuthenticated = (req, res, next) => {
 };
 
 // ---------------- Utility: Attendance ----------------
-function calculateAttendanceDays(registrationDate, leaves = []) {
+function calculateMonthlyAttendance(registrationDate, leaves = []) {
   const today = new Date();
   const regDate = new Date(registrationDate);
 
-  const totalDays = Math.floor((today - regDate) / (1000 * 60 * 60 * 24)) + 1;
+  // ✅ Define current monthly cycle based on registration date
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  // Start of this month (from registration date's day or 1st of month if earlier)
+  let cycleStart = new Date(currentYear, currentMonth, regDate.getDate());
+  if (cycleStart > today) {
+    // if registration day hasn’t come yet this month → use last month
+    cycleStart = new Date(currentYear, currentMonth - 1, regDate.getDate());
+  }
+
+  // End of the cycle → one day before next cycleStart
+  let cycleEnd = new Date(cycleStart);
+  cycleEnd.setMonth(cycleEnd.getMonth() + 1);
+  cycleEnd.setDate(cycleEnd.getDate() - 1);
+
+  // If today is before cycleEnd → restrict end to today
+  if (cycleEnd > today) cycleEnd = today;
+
+  // ✅ Total days in current cycle
+  const totalDays = Math.floor((cycleEnd - cycleStart) / (1000 * 60 * 60 * 24)) + 1;
 
   let messCutDays = 0;
   let waitingApprovalDays = 0;
 
+  // ✅ Count leave days that overlap with current cycle
   leaves.forEach((leave) => {
-    const from = new Date(leave.from);
-    const to = new Date(leave.to);
-    const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    const leaveFrom = new Date(leave.from);
+    const leaveTo = new Date(leave.to);
 
-    if (leave.approved) messCutDays += diff;     // ✅ Approved → mess cut
-    else waitingApprovalDays += diff;            // ✅ Pending → waiting approval
+    // Clip leave interval to current cycle
+    const from = leaveFrom < cycleStart ? cycleStart : leaveFrom;
+    const to = leaveTo > cycleEnd ? cycleEnd : leaveTo;
+
+    if (from <= to) {
+      const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+
+      if (leave.approved) messCutDays += diff; // approved
+      else waitingApprovalDays += diff;        // pending
+    }
   });
 
-  const presentDays = totalDays - messCutDays;   // only subtract approved leaves
+  const presentDays = totalDays - messCutDays;
 
-  return { presentDays, messCutDays, waitingApprovalDays };
+  return {
+    cycleStart: cycleStart.toDateString(),
+    cycleEnd: cycleEnd.toDateString(),
+    presentDays,
+    messCutDays,
+    waitingApprovalDays,
+    totalDays
+  };
 }
 
 // ---------------- Routes ----------------
@@ -56,7 +91,7 @@ router.get("/attendance", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
 
-  const { presentDays, messCutDays, waitingApprovalDays } = calculateAttendanceDays(
+  const { presentDays, messCutDays, waitingApprovalDays } = calculateMonthlyAttendance(
     foundUser.registrationDate,
     foundUser.leaves || []
   );
