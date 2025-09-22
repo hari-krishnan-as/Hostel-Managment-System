@@ -127,17 +127,15 @@ router.post("/update-complaint/:userId/:complaintId", async (req, res) => {
     );
 
     if (!updatedUser) {
-      console.error("Complaint not found");
       return res.status(404).send("Complaint not found");
     }
 
-    console.log(`Complaint ${complaintId} updated to ${status}`);
     res.redirect("/admin/view-complaint");
   } catch (err) {
-    console.error("Error updating complaint:", err.message);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 // View all suggestions from all users
 router.get("/view-suggestion", isAuthenticated, async (req, res) => {

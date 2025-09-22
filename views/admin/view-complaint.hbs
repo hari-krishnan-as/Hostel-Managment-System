@@ -76,40 +76,27 @@
   {{#each users}}
     <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md mb-6">
       <h2 class="text-lg font-bold text-white mb-3">{{this.name}} ({{this.hostelid}})</h2>
-      
-      {{#if this.complaints.length}}
-        <ul class="space-y-3">
-          {{#each this.complaints}}
-            <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md">
-              <p class="text-white">{{this.text}}</p>
 
-              <!-- ✅ Use complaint._id instead of @index -->
-              <form action="/admin/update-complaint/{{../_id}}/{{@index}}" method="POST">
-                <select 
-                  name="status" 
-                  class="status-select px-2 py-1 rounded-md text-white font-semibold mr-2"
-                >
-                  <option value="Pending"  {{#if (eq this.status "Pending")}}selected{{/if}}>Pending</option>
-                  <option value="Resolved" {{#if (eq this.status "Resolved")}}selected{{/if}}>Resolved</option>
-                  <option value="Rejected" {{#if (eq this.status "Rejected")}}selected{{/if}}>Rejected</option>
-                </select>
+      {{#each this.complaints}}
+        <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md mb-2">
+          <p class="text-white">{{this.text}}</p>
 
-                <button 
-                  type="submit" 
-                  class="bg-pink-600 text-white px-3 py-1 rounded-md hover:bg-pink-700 transition"
-                >
-                  Update
-                </button>
-              </form>
-            </li>
-          {{/each}}
-        </ul>
-      {{else}}
-        <p class="text-gray-400">No complaints available.</p>
-      {{/if}}
+          <form action="/admin/update-complaint/{{../_id}}/{{this._id}}" method="POST">
+            <select name="status" class="status-select px-2 py-1 rounded-md text-white font-semibold mr-2">
+              <option value="Pending"  {{#if (eq this.status "Pending")}}selected{{/if}}>Pending</option>
+              <option value="Resolved" {{#if (eq this.status "Resolved")}}selected{{/if}}>Resolved</option>
+              <option value="Rejected" {{#if (eq this.status "Rejected")}}selected{{/if}}>Rejected</option>
+            </select>
+            <button type="submit" class="bg-pink-600 text-white px-3 py-1 rounded-md hover:bg-pink-700 transition">
+              Update
+            </button>
+          </form>
+        </li>
+      {{/each}}
     </div>
   {{/each}}
 </main>
+
 </div>
 
 <script>
