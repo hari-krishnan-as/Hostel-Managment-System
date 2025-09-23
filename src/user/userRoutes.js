@@ -10,6 +10,22 @@ const isAuthenticated = (req, res, next) => {
   else res.redirect("/login");
 };
 
+// Middleware to get unseen count (used in all routes except notifications page)
+async function notificationMiddleware(req, res, next) {
+  try {
+    const unseenCount = await Notification.countDocuments({ seen: false });
+    res.locals.notificationCount = unseenCount; // 👈 available in all hbs
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ✅ Apply notification middleware to all routes in this router
+router.use(notificationMiddleware);
+
+
+
 // ---------------- Utility: Attendance ----------------
 function calculateMonthlyAttendance(registrationDate, leaves = []) {
   const today = new Date();
@@ -239,10 +255,15 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
 router.get("/notifications", async (req, res) => {
   try {
     const notifications = await Notification.find().sort({ _id: -1 });
+
+    // Mark all as seen when user opens the page
+    await Notification.updateMany({ seen: false }, { $set: { seen: true } });
+
     res.render("user/notifications", { notifications });
   } catch (err) {
     res.status(500).send("Error loading notifications");
   }
 });
 
-module.exports = router;
+module.exports = { router, notificationMiddleware };
+

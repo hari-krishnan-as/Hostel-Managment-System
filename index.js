@@ -1,22 +1,21 @@
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const hbs = require("hbs");   // ✅ Only keep this once
+const hbs = require("hbs");
 const bcrypt = require("bcrypt");
-require("dotenv").config();   // ✅ Load env variables
+require("dotenv").config();
 
-// Import DB connection
-const connectDB = require("./config"); 
-const User = require("./models/User.js");  // ✅ schema/model
-const Notification = require("./models/notification.js");
+// Import DB connection and models
+const connectDB = require("./config");
+const User = require("./models/User.js");
 
 // Import routes
-const adminRoutes = require("./src/admin/adminRoutes.js");
-const userRoutes = require("./src/user/userRoutes.js"); 
+const adminRoutes = require("./src/admin/adminRoutes");
+const { router: userRoutes, notificationMiddleware } = require("./src/user/userRoutes"); // ✅ only once
 
 const app = express();
 
-// ✅ Connect to DB
+// Connect to DB
 connectDB();
 
 // Middleware
@@ -38,7 +37,7 @@ app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Register Handlebars helpers
+// Handlebars helpers
 hbs.registerHelper("calcDays", (from, to) => {
   const start = new Date(from);
   const end = new Date(to);
@@ -50,14 +49,14 @@ hbs.registerHelper("eq", function (a, b) {
   return a === b;
 });
 
-// Default routes
+// Default public routes
 app.get("/", (req, res) => res.render("home"));
 app.get("/login", (req, res) => res.render("login"));
 app.get("/request", (req, res) => res.render("request"));
 app.get("/about", (req, res) => res.render("about"));
 app.get("/contact", (req, res) => res.render("contact"));
 
-// Fix incorrect attendance path
+// Redirect to correct attendance page
 app.get("/attendance", (req, res) => res.redirect("/user/attendance"));
 
 // Register user
@@ -99,7 +98,6 @@ app.post("/login", async (req, res) => {
       return res.send("<script>alert('Wrong Password'); window.location.href='/login';</script>");
     }
 
-    // ✅ New check: block login if the user is not approved
     if (!user.isApproved) {
       return res.send("<script>alert('Your account is pending admin approval.'); window.location.href='/login';</script>");
     }
@@ -120,7 +118,7 @@ app.get("/logout", (req, res) => {
 
 // Mount routes
 app.use("/admin", adminRoutes);
-app.use("/user", userRoutes);
+app.use("/user", userRoutes); // ✅ pass only the router
 
 // Start server
 const PORT = process.env.PORT || 3000;

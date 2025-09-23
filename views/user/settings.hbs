@@ -59,20 +59,29 @@
   <!-- Main Content -->
   <main class="flex flex-col flex-1">
     <!-- Header -->
-    <header class="w-full flex items-center justify-between md:justify-end py-4 px-4 md:px-6 bg-[#0F3460] text-white mb-6">
-      <h1 class="block md:hidden text-lg font-bold">Settings</h1>
-      <div class="flex items-center space-x-4 md:space-x-6">
-        <a href="/user/notifications" class="hover:text-gray-400 transition-colors duration-200">
-          <i class="fas fa-bell text-lg cursor-pointer"></i>
-        </a>
-        <a href="/user/settings" class="hover:text-gray-400 transition-colors duration-200">
-          <i class="fas fa-cog text-lg cursor-pointer"></i>
-        </a>
-        <a href="/user/profile" class="hover:text-gray-400 transition-colors duration-200">
-          <i class="fas fa-user-circle text-lg cursor-pointer"></i>
-        </a>
-      </div>
-    </header>
+<header class="w-full flex items-center justify-between md:justify-end py-4 px-4 md:px-6 bg-[#0F3460] text-white mb-6">
+  <h1 class="block md:hidden text-lg font-bold">Student Dashboard</h1>
+
+  <div class="flex items-center space-x-4 md:space-x-6 ml-auto">
+    <!-- Notification Bell -->
+    <a href="/user/notifications" class="relative hover:text-gray-400 transition-colors duration-200 focus:outline-none">
+      <i class="fas fa-bell text-white text-lg cursor-pointer"></i>
+      {{#if notificationCount}}
+        <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          {{notificationCount}}
+        </span>
+      {{/if}}
+    </a>
+
+    <!-- Other icons -->
+    <a href="/user/settings" class="hover:text-gray-400 transition-colors duration-200">
+      <i class="fas fa-cog text-white text-lg cursor-pointer"></i>
+    </a>
+    <a href="/user/profile" class="hover:text-gray-400 transition-colors duration-200">
+      <i class="fas fa-user-circle text-white text-lg cursor-pointer"></i>
+    </a>
+  </div>
+</header>
 
     <!-- Password Change Section -->
     <h1 class="text-2xl md:text-4xl font-bold text-center mb-4 md:mb-6">Settings</h1>

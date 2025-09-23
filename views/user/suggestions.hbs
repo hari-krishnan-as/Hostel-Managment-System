@@ -53,19 +53,33 @@
   <!-- Main Content -->
   <div class="flex flex-col flex-1">
     <!-- Header -->
-    <header class="w-full flex items-center justify-end py-3 md:py-4 px-4 md:px-6 bg-[#0F3460] text-white">
-      <div class="flex items-center space-x-4 md:space-x-6">
-        <a href="/user/notifications" class="hover:text-gray-400 transition">
-          <i class="fas fa-bell text-lg"></i>
-        </a>
-        <a href="/user/settings" class="hover:text-gray-400 transition">
-          <i class="fas fa-cog text-lg"></i>
-        </a>
-        <a href="/user/profile" class="hover:text-gray-400 transition">
-          <i class="fas fa-user-circle text-lg"></i>
-        </a>
-      </div>
-    </header>
+<header class="w-full flex items-center justify-between py-4 px-6 bg-[#0F3460] text-white">
+  <!-- Mobile Menu Button -->
+  <button id="menu-btn" class="md:hidden focus:outline-none">
+    <i class="fas fa-bars text-2xl"></i>
+  </button>
+
+  <!-- Right Icons -->
+  <div class="flex items-center space-x-6 ml-auto">
+    <!-- Notification Bell -->
+    <a href="/user/notifications" class="relative hover:text-gray-400 transition focus:outline-none">
+      <i class="fas fa-bell text-lg"></i>
+      {{#if notificationCount}}
+        <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          {{notificationCount}}
+        </span>
+      {{/if}}
+    </a>
+
+    <!-- Other icons -->
+    <a href="/user/settings" class="hover:text-gray-400 transition">
+      <i class="fas fa-cog text-lg"></i>
+    </a>
+    <a href="/user/profile" class="hover:text-gray-400 transition">
+      <i class="fas fa-user-circle text-lg"></i>
+    </a>
+  </div>
+</header>
 
     <!-- Suggestions Page -->
     <main class="flex-1 p-4 md:p-8">

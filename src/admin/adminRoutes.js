@@ -1,7 +1,7 @@
 const express = require("express");
-const User = require("../../models/User"); // ✅ import User model
 const router = express.Router();
-const Notification = require("../../models/notification.js");
+const User = require("../../models/User");
+const Notification = require("../../models/notification");
 
 // Middleware: check login
 const isAuthenticated = (req, res, next) => {
@@ -11,171 +11,109 @@ const isAuthenticated = (req, res, next) => {
 
 // Admin Dashboard
 router.get("/dashboard", isAuthenticated, async (req, res) => {
-  try {
-    const foundUser = await User.findOne({ hostelid: req.session.userId });
-
-    if (foundUser && foundUser.role === "admin") {
-      res.render("admin/admin_dashboard", { name: foundUser.name });
-    } else {
-      res.redirect("/login");
-    }
-  } catch (err) {
-    console.error("Error fetching admin:", err);
+  const admin = await User.findOne({ hostelid: req.session.userId });
+  if (admin && admin.role === "admin") {
+    res.render("admin/admin_dashboard", { name: admin.name });
+  } else {
     res.redirect("/login");
   }
 });
 
-// Admin - Pending Users
+// Pending Users
 router.get("/pending-users", isAuthenticated, async (req, res) => {
-  try {
-    const admin = await User.findOne({ hostelid: req.session.userId });
-    if (!admin || admin.role !== "admin") return res.redirect("/login");
+  const admin = await User.findOne({ hostelid: req.session.userId });
+  if (!admin || admin.role !== "admin") return res.redirect("/login");
 
-    const pendingUsers = await User.find({ isApproved: false });
-    res.render("admin/pending-users", { pendingUsers }); // ✅ Corrected line
-  } catch (err) {
-    console.error("Error fetching pending users:", err);
-    res.status(500).send("Error loading pending users");
-  }
+  const pendingUsers = await User.find({ isApproved: false });
+  res.render("admin/pending-users", { pendingUsers });
 });
 
-// Approve a user
-router.post("/approve/:id", async (req, res) => {
+// Approve user
+router.post("/approve/:id", isAuthenticated, async (req, res) => {
   await User.findByIdAndUpdate(req.params.id, { isApproved: true });
   res.redirect("/admin/pending-users");
 });
+
+// Expense Log
 router.get("/expense-log", isAuthenticated, (req, res) => {
   res.render("admin/expense-log");
 });
 
-
-// View Mess Cut Approvals
+// Approve Mess Cut
 router.get("/approve-messcut", isAuthenticated, async (req, res) => {
-  try {
-    const admin = await User.findOne({ hostelid: req.session.userId });
-    if (!admin || admin.role !== "admin") return res.redirect("/login");
+  const admin = await User.findOne({ hostelid: req.session.userId });
+  if (!admin || admin.role !== "admin") return res.redirect("/login");
 
-    // Get all users with at least one pending leave
-    const users = await User.find({ "leaves.approved": false });
-
-    // Flatten into table-friendly array
-    const messCuts = [];
-    users.forEach(user => {
-      user.leaves.forEach(leave => {
-        if (!leave.approved) {
-          messCuts.push({
-            _id: leave._id,
-            userId: user._id,
-            name: user.name,
-            hostelid: user.hostelid,
-            from: leave.from.toDateString(),
-            to: leave.to.toDateString(),
-            status: "Pending"
-          });
-        }
-      });
+  const users = await User.find({ "leaves.approved": false });
+  const messCuts = [];
+  users.forEach(user => {
+    user.leaves.forEach(leave => {
+      if (!leave.approved) {
+        messCuts.push({
+          _id: leave._id,
+          userId: user._id,
+          name: user.name,
+          hostelid: user.hostelid,
+          from: leave.from.toDateString(),
+          to: leave.to.toDateString(),
+          status: "Pending"
+        });
+      }
     });
-
-    res.render("admin/approve-messcut", { messCuts });
-  } catch (err) {
-    console.error("Error fetching mess cuts:", err);
-    res.status(500).send("Error loading mess cut requests");
-  }
+  });
+  res.render("admin/approve-messcut", { messCuts });
 });
 
 // Approve a specific mess cut request
 router.post("/approve-messcut/:id", isAuthenticated, async (req, res) => {
-  try {
-    const admin = await User.findOne({ hostelid: req.session.userId });
-    if (!admin || admin.role !== "admin") return res.redirect("/login");
-
-    await User.updateOne(
-      { "leaves._id": req.params.id },
-      { $set: { "leaves.$.approved": true } }
-    );
-
-    res.redirect("/admin/approve-messcut"); // ✅ admin stays on approval page
-  } catch (err) {
-    console.error("Error approving mess cut:", err);
-    res.status(500).send("Error approving mess cut");
-  }
-});
-
-// View all complaints
-router.get("/view-complaint", async (req, res) => {
-  try {
-    const users = await User.find(
-      { "complaints.0": { $exists: true } },
-      { name: 1, hostelid: 1, complaints: 1 }
-    );
-    res.render("admin/view-complaint", { users });
-  } catch (err) {
-    console.error("Error fetching complaints:", err.message);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-router.post("/update-complaint/:userId/:complaintId", async (req, res) => {
-  try {
-    const { userId, complaintId } = req.params;
-    const { status } = req.body;
-
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: userId, "complaints._id": complaintId },
-      { $set: { "complaints.$.status": status } },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).send("Complaint not found");
-    }
-
-    res.redirect("/admin/view-complaint");
-  } catch (err) {
-    res.status(500).send("Internal Server Error");
-  }
-});
-
-
-// View all suggestions from all users
-router.get("/view-suggestion", isAuthenticated, async (req, res) => {
-  const usersWithSuggestions = await User.find(
-    { "suggestions.0": { $exists: true } }, // only users with at least 1 suggestion
-    "name hostelid suggestions"
+  await User.updateOne(
+    { "leaves._id": req.params.id },
+    { $set: { "leaves.$.approved": true } }
   );
-
-  res.render("admin/view-suggestion", { users: usersWithSuggestions });
+  res.redirect("/admin/approve-messcut");
 });
 
-// GET Give Notification page
-router.get("/give-notification", async (req, res) => {
-  try {
-    const notifications = await Notification.find().sort({ _id: -1 }); 
-    res.render("admin/give-notification", { notifications });
-  } catch (err) {
-    res.status(500).send("Error loading notifications");
-  }
+// View complaints
+router.get("/view-complaint", isAuthenticated, async (req, res) => {
+  const users = await User.find({ "complaints.0": { $exists: true } }, { name: 1, hostelid: 1, complaints: 1 });
+  res.render("admin/view-complaint", { users });
 });
 
-// POST new notification
-router.post("/give-notification", async (req, res) => {
-  try {
-    const { message } = req.body;
-    await Notification.create({ message });
-    res.redirect("/admin/give-notification"); // reload page → history updates
-  } catch (err) {
-    res.status(500).send("Error saving notification");
-  }
+// Update complaint
+router.post("/update-complaint/:userId/:complaintId", isAuthenticated, async (req, res) => {
+  const { userId, complaintId } = req.params;
+  const { status } = req.body;
+
+  await User.findOneAndUpdate(
+    { _id: userId, "complaints._id": complaintId },
+    { $set: { "complaints.$.status": status } }
+  );
+  res.redirect("/admin/view-complaint");
 });
 
-// Delete a notification by ID
-router.post("/delete-notification/:id", async (req, res) => {
-  try {
-    await Notification.findByIdAndDelete(req.params.id);
-    res.redirect("/admin/give-notification"); // reload the page after delete
-  } catch (err) {
-    res.status(500).send("Error deleting notification");
-  }
+// View suggestions
+router.get("/view-suggestion", isAuthenticated, async (req, res) => {
+  const users = await User.find({ "suggestions.0": { $exists: true } }, "name hostelid suggestions");
+  res.render("admin/view-suggestion", { users });
+});
+
+// Give notification page
+router.get("/give-notification", isAuthenticated, async (req, res) => {
+  const notifications = await Notification.find().sort({ _id: -1 });
+  res.render("admin/give-notification", { notifications });
+});
+
+// POST notification
+router.post("/give-notification", isAuthenticated, async (req, res) => {
+  const { message } = req.body;
+  await Notification.create({ message });
+  res.redirect("/admin/give-notification");
+});
+
+// Delete notification
+router.post("/delete-notification/:id", isAuthenticated, async (req, res) => {
+  await Notification.findByIdAndDelete(req.params.id);
+  res.redirect("/admin/give-notification");
 });
 
 module.exports = router;
