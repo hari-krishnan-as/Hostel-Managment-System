@@ -67,20 +67,27 @@ app.post("/request", async (req, res) => {
       department: req.body.department,
       semester: req.body.semester,
       hostelid: req.body.hostelid,
+      program: req.body.program, 
       password: await bcrypt.hash(req.body.password, 10),
       role: req.body.role || "student",
       registrationDate: req.body.registrationDate,
     };
-
+    
+    // Check if user already exists
     const existingUser = await User.findOne({ hostelid: data.hostelid });
     if (existingUser) {
       return res.send("<script>alert('Hostelid already exists.'); window.location.href='/request';</script>");
     }
 
+    // Create the user (Mongoose validation and default values run here)
     await User.create(data);
     res.redirect("/login");
+
   } catch (err) {
+    // Log the error for server-side debugging
     console.error("Error creating user:", err.message);
+    
+    // Send a generic error response to the client
     res.status(500).send("Internal Server Error");
   }
 });

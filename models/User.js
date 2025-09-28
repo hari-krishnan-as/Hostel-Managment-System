@@ -4,6 +4,7 @@ const loginSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     department: { type: String, required: true, trim: true },
+    program: { type: String, required: true, trim: true },
     semester: { type: Number, required: true, min: 1, max: 10 },
     hostelid: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
