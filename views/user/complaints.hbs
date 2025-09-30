@@ -145,5 +145,50 @@
       </div>
     </main>
   </div>
+  <script>
+    // --- STATUS COLOR LOGIC (UNCHANGED) ---
+  function updateSelectBg(select) {
+    select.classList.remove("bg-yellow-500", "bg-green-600", "bg-red-600");
+    
+    const status = select.value;
+
+    if (status === "Pending") {
+      select.classList.add("bg-yellow-500");
+    } else if (status === "Resolved") {
+      select.classList.add("bg-green-600");
+    } else if (status === "Rejected") {
+      select.classList.add("bg-red-600");
+    }
+    select.classList.add("text-white", "font-semibold");
+  }
+
+  // Apply styling on load + on change
+  document.querySelectorAll(".status-select").forEach(select => {
+    updateSelectBg(select);
+    select.addEventListener("change", (e) => updateSelectBg(e.target));
+  });
+    
+    // --- ✅ NEW SIMPLE FILTERING LOGIC ---
+    function filterComplaints() {
+        const programFilter = document.getElementById('programFilter').value;
+        const userCards = document.querySelectorAll('.complaint-user-card');
+
+        userCards.forEach(card => {
+            // Normalize card program for comparison (e.g., 'MCA')
+            const cardProgram = card.getAttribute('data-program').toUpperCase(); 
+            
+            // Normalize filter value for comparison (e.g., 'MCA' or 'ALL')
+            const filterValue = programFilter.toUpperCase();
+
+            // Check if the filter is 'ALL' or if the programs match
+            if (filterValue === 'ALL' || cardProgram === filterValue) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+
 </body>
 </html>

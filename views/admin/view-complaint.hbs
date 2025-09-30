@@ -23,7 +23,7 @@
         </li>
         <li>
           <a href="pending-users" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition ">
-            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Pending users</span>
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Registered Students</span>
           </a>
         </li>
         <li>
@@ -62,62 +62,96 @@
 
   <!-- Main Content -->
   <div class="flex flex-col flex-1">
-    <header class="w-full flex items-center justify-end py-3 px-6 bg-[#0F3460] text-white">
-      <div class="flex items-center space-x-6">
-        <i class="fas fa-cog text-lg hover:text-gray-400"></i>
-        <i class="fas fa-user-circle text-lg hover:text-gray-400"></i>
-      </div>
-    </header>
+    <header class="w-full flex items-center justify-end py-3 px-6 bg-[#0F3460] text-white">
+      <div class="flex items-center space-x-6">
+        <i class="fas fa-cog text-lg hover:text-gray-400"></i>
+        <i class="fas fa-user-circle text-lg hover:text-gray-400"></i>
+      </div>
+    </header>
 
-   <!-- Complaint Management -->
-<main class="p-4 md:p-8 flex-1">
-  <h1 class="text-xl md:text-3xl font-bold text-pink-500 mb-6 text-center">View Complaints</h1>
+   <main class="p-4 md:p-8 flex-1">
+  <h1 class="text-xl md:text-3xl font-bold text-pink-500 mb-6 text-center">View Complaints</h1>
 
-  {{#each users}}
-    <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md mb-6">
-      <h2 class="text-lg font-bold text-white mb-3">{{this.name}} ({{this.hostelid}})</h2>
-
-      {{#each this.complaints}}
-        <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md mb-2">
-          <p class="text-white">{{this.text}}</p>
-
-          <form action="/admin/update-complaint/{{../_id}}/{{this._id}}" method="POST">
-            <select name="status" class="status-select px-2 py-1 rounded-md text-white font-semibold mr-2">
-              <option value="Pending"  {{#if (eq this.status "Pending")}}selected{{/if}}>Pending</option>
-              <option value="Resolved" {{#if (eq this.status "Resolved")}}selected{{/if}}>Resolved</option>
-              <option value="Rejected" {{#if (eq this.status "Rejected")}}selected{{/if}}>Rejected</option>
-            </select>
-            <button type="submit" class="bg-pink-600 text-white px-3 py-1 rounded-md hover:bg-pink-700 transition">
-              Update
-            </button>
-          </form>
-        </li>
-      {{/each}}
+  <div class="flex gap-4 mb-6 bg-[#0F3460] p-4 rounded-lg">
+    
+    <div class="flex items-center space-x-2">
+        <label for="programFilter" class="font-semibold text-gray-300">Filter by Program:</label>
+        <select id="programFilter" onchange="filterComplaints()" class="bg-[#1A1A2E] border border-[#1B1F3B] text-white rounded-md p-2 text-sm">
+            <option value="All">All Programs</option>
+            {{#each uniquePrograms}}
+                <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </select>
     </div>
-  {{/each}}
+
+  </div>
+    {{#each users}}
+        <div class="complaint-user-card bg-[#1B1F3B] p-6 rounded-xl shadow-md mb-6"
+         data-program="{{this.program}}">       <h2 class="text-lg font-bold text-white mb-3">{{this.name}} ({{this.hostelid}})</h2>
+
+      {{#each this.complaints}}
+        <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md mb-2">
+          <p class="text-white">{{this.text}}</p>
+
+          <form action="/admin/update-complaint/{{../_id}}/{{this._id}}" method="POST">
+            <select name="status" class="status-select px-2 py-1 rounded-md text-white font-semibold mr-2">
+              <option value="Pending"  {{#if (eq this.status "Pending")}}selected{{/if}}>Pending</option>
+              <option value="Resolved" {{#if (eq this.status "Resolved")}}selected{{/if}}>Resolved</option>
+              <option value="Rejected" {{#if (eq this.status "Rejected")}}selected{{/if}}>Rejected</option>
+            </select>
+            <button type="submit" class="bg-pink-600 text-white px-3 py-1 rounded-md hover:bg-pink-700 transition">
+              Update
+            </button>
+          </form>
+        </li>
+      {{/each}}
+    </div>
+  {{/each}}
 </main>
 
 </div>
 
 <script>
-  function updateSelectBg(select) {
-    // Reset background colors
-    select.classList.remove("bg-yellow-500", "bg-green-600", "bg-red-600");
+    // --- STATUS COLOR LOGIC (UNCHANGED) ---
+  function updateSelectBg(select) {
+    select.classList.remove("bg-yellow-500", "bg-green-600", "bg-red-600");
+    
+    const status = select.value;
 
-    if (select.value === "Pending") {
-      select.classList.add("bg-yellow-500");
-    } else if (select.value === "Resolved") {
-      select.classList.add("bg-green-600");
-    } else if (select.value === "Rejected") {
-      select.classList.add("bg-red-600");
+    if (status === "Pending") {
+      select.classList.add("bg-yellow-500");
+    } else if (status === "Resolved") {
+      select.classList.add("bg-green-600");
+    } else if (status === "Rejected") {
+      select.classList.add("bg-red-600");
+    }
+    select.classList.add("text-white", "font-semibold");
+  }
+
+  // Apply styling on load + on change
+  document.querySelectorAll(".status-select").forEach(select => {
+    updateSelectBg(select);
+    select.addEventListener("change", (e) => updateSelectBg(e.target));
+  });
+    
+    // --- ✅ NEW SIMPLE FILTERING LOGIC ---
+    function filterComplaints() {
+        const programFilter = document.getElementById('programFilter').value;
+        const userCards = document.querySelectorAll('.complaint-user-card');
+
+        userCards.forEach(card => {
+            
+            const cardProgram = card.getAttribute('data-program').toUpperCase(); 
+           
+            const filterValue = programFilter.toUpperCase();
+
+            if (filterValue === 'ALL' || cardProgram === filterValue) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
-  }
-
-  // Apply styling on load + on change
-  document.querySelectorAll(".status-select").forEach(select => {
-    updateSelectBg(select);
-    select.addEventListener("change", () => updateSelectBg(select));
-  });
 </script>
 
 </body>

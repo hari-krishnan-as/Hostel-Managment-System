@@ -19,13 +19,29 @@ router.get("/dashboard", isAuthenticated, async (req, res) => {
   }
 });
 
-// Pending Users
-router.get("/pending-users", isAuthenticated, async (req, res) => {
-  const admin = await User.findOne({ hostelid: req.session.userId });
-  if (!admin || admin.role !== "admin") return res.redirect("/login");
+// adminRoutes.js (The /pending-users route replacement)
 
-  const pendingUsers = await User.find({ isApproved: false });
-  res.render("admin/pending-users", { pendingUsers });
+// Registered Users List (formerly Pending Users)
+router.get("/pending-users", isAuthenticated, async (req, res) => {
+  const admin = await User.findOne({ hostelid: req.session.userId });
+  
+  if (!admin || admin.role !== "admin") return res.redirect("/login");
+
+  // 1. Fetch all registered students (excluding admin)
+  const registeredUsers = await User.find({ role: { $ne: 'admin' } }).select('-password');
+
+    // 2. ✅ FIX: Get unique program names by converting them all to uppercase first.
+    const uniqueProgramsSet = new Set(
+        registeredUsers.map(user => String(user.program).toUpperCase())
+    );
+    
+    // Convert the Set back to an array for the template
+    const uniquePrograms = [...uniqueProgramsSet].filter(p => p);
+    
+  res.render("admin/pending-users", { 
+    registeredUsers: registeredUsers,
+    uniquePrograms: uniquePrograms // Only contains uppercase/standardized program names
+});
 });
 
 // Approve user
@@ -74,12 +90,25 @@ router.post("/approve-messcut/:id", isAuthenticated, async (req, res) => {
 });
 
 // View complaints
+
 router.get("/view-complaint", isAuthenticated, async (req, res) => {
-  const users = await User.find({ "complaints.0": { $exists: true } }, { name: 1, hostelid: 1, complaints: 1 });
-  res.render("admin/view-complaint", { users });
+    // Check if the user is an admin (optional, but good practice)
+    const admin = await User.findOne({ hostelid: req.session.userId });
+    if (!admin || admin.role !== "admin") return res.redirect("/login");
+    const users = await User.find(
+        { "complaints.0": { $exists: true } }, 
+        { name: 1, hostelid: 1, program: 1, complaints: 1 } // Added 'program' field
+    ).lean(); 
+    const uniqueProgramsSet = new Set(
+        users.map(user => String(user.program).toUpperCase())
+    );
+    const uniquePrograms = [...uniqueProgramsSet].filter(p => p);
+    res.render("admin/view-complaint", { 
+        users: users,
+        uniquePrograms: uniquePrograms // Pass the unique list to the template
+    });
 });
 
-// Update complaint
 router.post("/update-complaint/:userId/:complaintId", isAuthenticated, async (req, res) => {
   const { userId, complaintId } = req.params;
   const { status } = req.body;

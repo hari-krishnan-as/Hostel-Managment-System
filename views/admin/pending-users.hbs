@@ -76,44 +76,71 @@
     </header>
     <!-- Table -->
   <main class="flex-1 p-6">
-    {{#if pendingUsers.length}}
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-[#1A1A2E] rounded-lg shadow-md">
-          <thead>
-            <tr class="bg-[#0F3460] text-left">
-              <th class="p-3">Name</th>
-              <th class="p-3">Department</th>
-              <th class="p-3">Semester</th>
-              <th class="p-3">Hostel ID</th>
-              <th class="p-3">Registered On</th>
-              <th class="p-3">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each pendingUsers}}
-              <tr class="border-b border-[#0F3460] hover:bg-[#222A49]">
-                <td class="p-3">{{this.name}}</td>
-                <td class="p-3">{{this.department}}</td>
-                <td class="p-3">{{this.semester}}</td>
-                <td class="p-3">{{this.hostelid}}</td>
-                <td class="p-3">{{this.registrationDate}}</td>
-                <td class="p-3">
-                  <form action="/admin/approve/{{this._id}}" method="POST">
-                    <button 
-                      type="submit" 
-                      class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                      Approve
-                    </button>
-                  </form>
-                </td>
-              </tr>
+    <h1 class="text-2xl font-bold mb-4">Registered Students List</h1>
+
+    <div class="mb-4 flex items-center space-x-4">
+        <label for="programFilter" class="font-semibold text-gray-300">Filter by Program:</label>
+        <select id="programFilter" onchange="filterTable()" class="bg-[#1A1A2E] border border-[#0F3460] text-white rounded-lg p-2 focus:ring-pink-500 focus:border-pink-500">
+            <option value="All">All Programs</option>
+            
+            {{#each uniquePrograms}}
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
-          </tbody>
-        </table>
-      </div>
-    {{else}}
-      <p class="text-center text-gray-400">No pending registrations.</p>
-    {{/if}}
-  </main>
+        </select>
+    </div>
+        {{#if registeredUsers.length}} 
+      <div class="overflow-x-auto">
+        <table id="registeredTable" class="min-w-full bg-[#1A1A2E] rounded-lg shadow-md">
+          <thead>
+            <tr class="bg-[#0F3460] text-left">
+              <th class="p-3">Name</th>
+              <th class="p-3">Department</th>
+              <th class="p-3">Program</th>
+              <th class="p-3">Semester</th>
+              <th class="p-3">Hostel ID</th>
+              <th class="p-3">Registered On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each registeredUsers}} 
+              <tr class="border-b border-[#0F3460] hover:bg-[#222A49]" data-program="{{this.program}}">
+                <td class="p-3">{{this.name}}</td>
+                <td class="p-3">{{this.department}}</td>
+                <td class="p-3">{{this.program}}</td>
+                <td class="p-3">{{this.semester}}</td>
+                <td class="p-3">{{this.hostelid}}</td>
+                <td class="p-3">{{this.registrationDate}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      <p class="text-center text-gray-400">No students are currently registered.</p>
+    {{/if}}
+  </main>
+
+</div>
+
+<script>
+    function filterTable() {
+        const select = document.getElementById('programFilter');
+        const filterValue = select.value.toUpperCase(); // Normalize selected value
+        const tableBody = document.querySelector('#registeredTable tbody');
+        const rows = tableBody.getElementsByTagName('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const program = row.getAttribute('data-program').toUpperCase(); // Normalize row value
+            
+            if (filterValue === 'ALL' || program === filterValue) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+</script>
+
 </body>
 </html>
