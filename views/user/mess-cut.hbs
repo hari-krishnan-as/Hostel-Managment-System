@@ -93,22 +93,28 @@
 
         <!-- Mess Cut Leave Form -->
         <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md">
-          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-3 md:mb-4">Apply Leave</h2>
-          <form action="/user/apply-mess-cut" method="POST">
-            <label class="block text-white mb-2 text-sm md:text-base">Start Date</label>
-            <input type="date" name="startDate" required 
-              class="w-full p-2 md:p-3 rounded-md bg-[#0F3460] text-white mb-3 md:mb-4 text-sm md:text-base"/>
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-3 md:mb-4">Apply Leave</h2>
+          
+          {{!-- ADDED onsubmit FOR PRE-SUBMISSION CONFIRMATION --}}
+          <form 
+                action="/user/apply-mess-cut" 
+                method="POST" 
+                onsubmit="return confirm('Are you sure you want to submit this leave application for mess cut?')"
+            >
+            <label class="block text-white mb-2 text-sm md:text-base">Start Date</label>
+            <input type="date" name="startDate" required 
+              class="w-full p-2 md:p-3 rounded-md bg-[#0F3460] text-white mb-3 md:mb-4 text-sm md:text-base"/>
 
-            <label class="block text-white mb-2 text-sm md:text-base">End Date</label>
-            <input type="date" name="endDate" required 
-              class="w-full p-2 md:p-3 rounded-md bg-[#0F3460] text-white mb-3 md:mb-4 text-sm md:text-base"/>
+            <label class="block text-white mb-2 text-sm md:text-base">End Date</label>
+            <input type="date" name="endDate" required 
+              class="w-full p-2 md:p-3 rounded-md bg-[#0F3460] text-white mb-3 md:mb-4 text-sm md:text-base"/>
 
-            <button type="submit" 
-              class="w-full bg-pink-500 text-white py-2 rounded-md hover:bg-pink-600 text-sm md:text-base">
-              Apply
-            </button>
-          </form>
-        </div>
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white py-2 rounded-md hover:bg-pink-600 text-sm md:text-base">
+              Apply
+            </button>
+          </form>
+        </div>
 <!-- Leave History -->
 <div class="bg-[#1B1F3B] p-4 md:p-6 rounded-xl shadow-md overflow-x-auto">
   <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-3 md:mb-4">Leave History</h2>

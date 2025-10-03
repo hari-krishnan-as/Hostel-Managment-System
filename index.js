@@ -1,5 +1,3 @@
-// index.js
-
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
@@ -20,41 +18,16 @@ const app = express();
 
 connectDB();
 
-// --- START: Excel Data Loading (FINAL FIX FOR DATES) ---
-let registrationData = [];
+// --- MODIFIED: Excel Data Storage (Now loaded via Admin upload) ---
+// Initialize registrationData globally. It will be populated after an admin successfully uploads a file.
+let registrationData = []; 
 
-// Explicit Windows path provided by the user (C:\Users\alias\OneDrive\Desktop\registration_sheet.xlsx)
-const EXCEL_FILE_PATH = "C:\\Users\\alias\\OneDrive\\Desktop\\registration_sheet.xlsx";
+// Store the registration data in app.locals so it can be accessed easily by other parts of the application.
+// This is where the admin upload route will store the parsed data.
+app.locals.registrationData = registrationData; 
 
-try {
-  // CRITICAL FIX: Use the cellDates option to correctly parse dates stored in Excel
-  const workbook = XLSX.readFile(EXCEL_FILE_PATH, { cellDates: true }); 
-  const sheetName = workbook.SheetNames[0]; 
-  let rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-  
-  // Aggressively clean and normalize the data
-  registrationData = rawData.map(record => {
-    const cleanedRecord = {};
-    for (const key in record) {
-      if (typeof record[key] === 'string') {
-        // Trim whitespace from all string fields
-        cleanedRecord[key] = record[key].trim();
-      } else if (record[key] instanceof Date) {
-        // Keep Date objects as they are (parsed correctly by {cellDates: true})
-        cleanedRecord[key] = record[key];
-      } else {
-        // Keep other non-string data (like Semester/Numbers) as is
-        cleanedRecord[key] = record[key];
-      }
-    }
-    return cleanedRecord;
-  });
-
-} catch (error) {
-  console.error("❌ Error loading Excel sheet (CRITICAL):", error.message);
-  console.error("Please fix the file path or permissions before running.");
-  process.exit(1); // STOP THE SERVER IF EXCEL FAILS TO LOAD
-}
+// --- REMOVED: Hard-coded Excel Loading Block ---
+// The old try...catch block that loaded the file from a fixed path is removed.
 
 // Middleware
 app.use(express.json());
@@ -102,10 +75,17 @@ app.post("/request", async (req, res) => {
   let data = {};
   
   try {
+    // Get the current registration data from app.locals
+    const currentRegistrationData = app.locals.registrationData || []; 
+
+    if (currentRegistrationData.length === 0) {
+      return res.send("<script>alert('Registration sheet has not been loaded by the admin. Please try again later.'); window.location.href='/request';</script>");
+    }
+
     const { name, department, program, password, role } = req.body;
 
     // 1. DIAGNOSTIC FIND: Try to find user by NAME ONLY
-    const excelUser = registrationData.find(
+    const excelUser = currentRegistrationData.find(
       (record) => String(record.Name || '').toLowerCase() === name.toLowerCase()
     );
 
@@ -210,7 +190,7 @@ app.get("/logout", (req, res) => {
 
 // Mount routes
 app.use("/admin", adminRoutes);
-app.use("/user", userRoutes); // ✅ pass only the router
+app.use("/user", userRoutes); 
 
 // Start server
 const PORT = process.env.PORT || 3000;

@@ -90,19 +90,25 @@
         
         <!-- Submit Complaint -->
         <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
-          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Complaint</h2>
-          <form action="/user/complaints" method="POST">
-            <textarea 
-              name="complaint" 
-              placeholder="Enter your complaint..." 
-              required
-              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
-            <button type="submit" 
-              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600 transition">
-              Submit
-            </button>
-          </form>
-        </div>
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Complaint</h2>
+          
+          <form 
+                action="/user/complaints" 
+                method="POST"
+                {{!-- ADDED onsubmit FOR PRE-SUBMISSION CONFIRMATION --}}
+                onsubmit="return confirm('Are you sure you want to submit this complaint? It will be sent to the administration for review.')"
+            >
+            <textarea 
+              name="complaint" 
+              placeholder="Enter your complaint..." 
+              required
+              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600 transition">
+              Submit
+            </button>
+          </form>
+        </div>
 
        <!-- Complaint History -->
 <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">

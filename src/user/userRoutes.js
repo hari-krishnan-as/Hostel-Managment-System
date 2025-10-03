@@ -159,26 +159,76 @@ router.get("/attendance", isAuthenticated, async (req, res) => {
 
 // Apply Mess Cut
 router.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
-  const { startDate, endDate } = req.body;
-  const foundUser = await User.findOne({ hostelid: req.session.userId });
-  if (!foundUser) return res.redirect("/login");
+  const { startDate, endDate } = req.body;
+  const foundUser = await User.findOne({ hostelid: req.session.userId });
+  
+  if (!foundUser) return res.redirect("/login");
 
-  foundUser.leaves.push({
-    from: new Date(startDate),
-    to: new Date(endDate),
-    approved: false,    // ✅ ensure new requests are pending
-  });
-  await foundUser.save();
+  // --- START: Date Validation and Adjustment ---
 
-  res.redirect("/user/mess-cut");  // ✅ redirect to attendance → chart refreshes
+  // 1. Define Tomorrow's Date (at midnight UTC)
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  
+  // Calculate the date for tomorrow (Today + 1 day)
+  const tomorrow = new Date(today);
+  tomorrow.setUTCDate(today.getUTCDate() + 1);
+
+  // Convert user input dates to Date objects for comparison
+  const requestedStart = new Date(startDate);
+  const requestedEnd = new Date(endDate);
+    
+  // Normalize the requested start date to midnight UTC for accurate comparison
+  const requestedStartUTC = new Date(Date.UTC(requestedStart.getFullYear(), requestedStart.getMonth(), requestedStart.getDate()));
+    
+  // 2. Basic Check: End date cannot be before start date
+  if (requestedEnd < requestedStartUTC) {
+        return res.send(`<script>alert('End date cannot be before the start date.'); window.location.href='/user/mess-cut';</script>`);
+  }
+
+  // 3. Check if the requested start date is today or in the past (i.e., less than tomorrow's date)
+  let adjustedStart = requestedStartUTC;
+  let message = "Leave application submitted successfully, pending admin approval.";
+  let dateWasAdjusted = false;
+
+  if (requestedStartUTC < tomorrow) {
+        
+    // Adjust the start date to tomorrow
+    adjustedStart = tomorrow;
+    dateWasAdjusted = true;
+
+    // If the requested end date is *before* the adjusted start, the request is invalid.
+    if (requestedEnd < adjustedStart) {
+        return res.send(`<script>alert('The minimum notice period is 1 day. Please adjust your dates.'); window.location.href='/user/mess-cut';</script>`);
+    }
+
+    // Format the adjusted date for the alert message (e.g., 'YYYY-MM-DD')
+    const year = adjustedStart.getUTCFullYear();
+    const month = String(adjustedStart.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(adjustedStart.getUTCDate()).padStart(2, '0');
+    const adjustedDateString = `${year}-${month}-${day}`;
+
+    message = `Notice period is 1 day. Your leave start date has been automatically adjusted to tomorrow (${adjustedDateString}). It is now pending approval.`;
+  }
+
+  // Process the leave request with the potentially adjusted start date
+  foundUser.leaves.push({
+    from: adjustedStart, // Use the adjusted or original normalized date
+    to: requestedEnd,
+    approved: false,
+  });
+  await foundUser.save();
+
+  // Send confirmation message (which includes adjustment if needed)
+  res.send(`<script>alert('${message}'); window.location.href='/user/mess-cut';</script>`);
 });
 
 // Mess Cut History
 router.get("/mess-cut", isAuthenticated, async (req, res) => {
-  const foundUser = await User.findOne({ hostelid: req.session.userId });
-  if (!foundUser) return res.redirect("/login");
+  const foundUser = await User.findOne({ hostelid: req.session.userId });
+  if (!foundUser) return res.redirect("/login");
 
-  res.render("user/mess-cut", { user: foundUser, messCuts: foundUser.leaves });
+  res.render("user/mess-cut", { user: foundUser, messCuts: foundUser.leaves });
 });
 
 // complaint routes
