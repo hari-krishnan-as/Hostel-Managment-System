@@ -22,77 +22,136 @@
           Registration Form
         </h2>
 
-        <form action="request" method="post" class="space-y-5">
-          
-          <div>
-            <label for="name" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              placeholder="Enter Your Name"
-              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
-            />
-          </div>
+       <form action="request" method="post" class="space-y-5">
 
-          <div>
-            <label for="department" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Department</label>
-            <input
-              type="text"
-              id="department"
-              name="department"
-              required
-              placeholder="Enter Your Department"
-              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
-            />
-          </div>
-
-          <div>
-            <label for="program" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Program</label>
-            <input
-              type="text"
-              id="program"
-              name="program"
-              required
-              placeholder="Enter Your program"
-              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
-            />
-          </div>
-
-          <div>
-            <label for="semester" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Semester</label>
-            <input
-              type="text"
-              id="semester"
-              name="semester"
-              required
-              placeholder="Enter Your Semester"
-              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
-            />
-          </div>
-
-          <div>
-            <label for="password" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Create Your Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              placeholder="Enter Your Password"
-              class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="w-full bg-[#e4007f] hover:bg-[#b60063] text-white font-medium py-2 sm:py-3 px-4 rounded-2xl sm:rounded-3xl shadow-md hover:shadow-lg transition text-sm sm:text-base"
-          >
-            Register
-          </button>
-        </form>
-      </div>
-    </div>
+  <!-- Name -->
+  <div>
+    <label for="name" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Name</label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      required
+      placeholder="Enter Your Name"
+      class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
+    />
   </div>
+
+  <!-- Department -->
+  <div>
+    <label for="department" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Department</label>
+    <select
+      id="department"
+      name="department"
+      required
+      class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
+    >
+      <option value="">Select Department</option>
+      <option value="CA">CA</option>
+      <option value="BTech">BTech</option>
+      <option value="MBA">MBA</option>
+    </select>
+  </div>
+
+  <!-- Program -->
+  <div>
+    <label for="program" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Program</label>
+    <select
+      id="program"
+      name="program"
+      required
+      class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
+    >
+      <option value="">Select Program</option>
+    </select>
+  </div>
+
+  <!-- Semester -->
+  <div>
+    <label for="semester" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Semester</label>
+    <select
+      id="semester"
+      name="semester"
+      required
+      class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
+    >
+      <option value="">Select Semester</option>
+    </select>
+  </div>
+
+  <!-- Password -->
+  <div>
+    <label for="password" class="block text-gray-700 font-semibold mb-2 text-sm sm:text-base">Create Your Password</label>
+    <input
+      type="password"
+      id="password"
+      name="password"
+      required
+      placeholder="Enter Your Password"
+      class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e4007f] text-sm sm:text-base"
+    />
+  </div>
+
+  <!-- Submit -->
+  <button
+    type="submit"
+    class="w-full bg-[#e4007f] hover:bg-[#b60063] text-white font-medium py-2 sm:py-3 px-4 rounded-2xl sm:rounded-3xl shadow-md hover:shadow-lg transition text-sm sm:text-base"
+  >
+    Register
+  </button>
+</form>
+
+<!-- JavaScript for Dynamic Program & Semester Options -->
+<script>
+  const departmentSelect = document.getElementById("department");
+  const programSelect = document.getElementById("program");
+  const semesterSelect = document.getElementById("semester");
+
+  const programs = {
+    CA: ["MCA", "INMCA"],
+    BTech: ["NASB", "EEE", "CS"],
+    MBA: ["MBA"]
+  };
+
+  const semesters = {
+    MCA: ["1", "2", "3", "4"],
+    INMCA: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+    MBA: ["1", "2", "3", "4"],
+    NASB: ["1", "2", "3", "4", "5", "6", "7", "8"],
+    EEE: ["1", "2", "3", "4", "5", "6", "7", "8"],
+    CS: ["1", "2", "3", "4", "5", "6", "7", "8"]
+  };
+
+  // When department changes
+  departmentSelect.addEventListener("change", () => {
+    const selectedDept = departmentSelect.value;
+    programSelect.innerHTML = `<option value="">Select Program</option>`;
+    semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
+
+    if (programs[selectedDept]) {
+      programs[selectedDept].forEach(p => {
+        const option = document.createElement("option");
+        option.value = p;
+        option.textContent = p;
+        programSelect.appendChild(option);
+      });
+    }
+  });
+
+  // When program changes
+  programSelect.addEventListener("change", () => {
+    const selectedProgram = programSelect.value;
+    semesterSelect.innerHTML = `<option value="">Select Semester</option>`;
+
+    if (semesters[selectedProgram]) {
+      semesters[selectedProgram].forEach(s => {
+        const option = document.createElement("option");
+        option.value = s;
+        option.textContent = `Semester ${s}`;
+        semesterSelect.appendChild(option);
+      });
+    }
+  });
+</script>
 </body>
 </html>

@@ -81,15 +81,122 @@
       </div>
     </header>
     <!-- Home Section -->
-    <main class="p-4 md:p-8 flex-1 flex justify-center items-start">
-      <div id="home-section" class="w-full max-w-2xl text-center">
-        <h1 class="text-xl md:text-3xl font-bold text-gray-50 mb-4 md:mb-6">
-          Welcome <span class="text-pink-500">{{name}}</span>!
-        </h1>
-        <p class="text-gray-300 text-sm md:text-base">
-          Select an option from the sidebar to get started.
-        </p>
-      </div>
-    </main>
+    <main class="p-4 md:p-8 flex-1">
+      <div class="w-full max-w-4xl mx-auto">
+        <h1 class="text-xl md:text-3xl font-bold text-gray-50 mb-6">
+          Welcome back, <span class="text-pink-500">{{user.name}}</span>!
+        </h1>
+        
+                <div id="bill-notification-area" class="mb-8">
+                  </div>
+        
+                <div id="bill-display-area" class="p-6 bg-[#1A1A2E] rounded-lg shadow-xl hidden">
+          <h3 class="text-2xl font-bold text-red-400 mb-4">Latest Monthly Bill</h3>
+          <div id="bill-content">
+                      </div>
+            <a href="/user/mess-bill" class="text-red-400 hover:text-red-300 mt-4 block text-sm font-semibold pt-4 border-t border-[#0F3460]">
+                View Full Bill History &rarr;
+            </a>
+        </div>
+        
+              </div>
+    </main>
+  </div>
+  
+    <script>
+    const notificationArea = document.getElementById('bill-notification-area');
+    const billDisplayArea = document.getElementById('bill-display-area');
+    const billContent = document.getElementById('bill-content');
+
+    // Function to format the bill data into HTML
+    function renderBill(billData) {
+        const { bills } = billData;
+        
+        if (!bills || bills.length === 0) {
+            return '<p class="text-gray-400">No bill data found yet.</p>';
+        }
+
+        const latestBill = bills[0];
+        
+        return `
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="bg-[#0F3460] p-4 rounded-md">
+                    <p class="text-sm text-gray-400">Billing Cycle</p>
+                    <p class="text-lg font-semibold text-red-300">${latestBill.displayDate}</p>
+                </div>
+                <div class="bg-[#0F3460] p-4 rounded-md">
+                    <p class="text-sm text-gray-400">Your Share</p>
+                    <p class="text-xl font-bold text-green-400">${latestBill.formattedShare}</p>
+                </div>
+                <div class="bg-[#0F3460] p-4 rounded-md">
+                    <p class="text-sm text-gray-400">Present Days</p>
+                    <p class="text-lg font-semibold">${latestBill.presentDays}</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-4">Total Mess Expense for the Cycle: ${latestBill.formattedTotalExpense} | Rate Per Day: ${latestBill.formattedRate}</p>
+        `;
+    }
+
+    // Function to fetch the bill data, clear the flag, and display the bill
+    async function viewLatestBill() {
+        // Clear the notification area immediately to show action is taken
+        notificationArea.innerHTML = ''; 
+        
+        // Show a loading spinner (optional)
+        billDisplayArea.classList.remove('hidden');
+        billContent.innerHTML = '<p class="text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i> Loading bill data...</p>';
+
+        try {
+            // Fetch the bill data which will also reset the needsBillRefresh flag on the server
+            const response = await fetch('/user/fetch-latest-bill-data');
+            const result = await response.json();
+
+            if (response.ok && result.success && result.billData) {
+                // Render the data
+                billContent.innerHTML = renderBill(result.billData);
+                
+            } else {
+                billContent.innerHTML = `<p class="text-red-500">Error: ${result.message || 'Could not fetch the latest bill data.'}</p>`;
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            billContent.innerHTML = '<p class="text-red-500">A network error occurred while fetching the bill.</p>';
+        }
+    }
+
+    // Function to check bill status on page load
+    async function checkBillStatus() {
+        try {
+            // Check the status flag
+            const response = await fetch('/user/bill-status');
+            const result = await response.json();
+
+            if (result.billGenerated) {
+                notificationArea.innerHTML = `
+                    <div class="bg-green-600 p-4 rounded-md flex flex-col md:flex-row justify-between items-center text-white shadow-lg border-2 border-green-400">
+                        <p class="font-semibold text-lg"><i class="fas fa-receipt mr-2"></i> A NEW MESS BILL HAS BEEN GENERATED!</p>
+                        <button onclick="viewLatestBill()" class="mt-3 md:mt-0 bg-white text-green-600 px-4 py-2 rounded-md font-bold hover:bg-gray-200 transition shadow-md">
+                            View Bill
+                        </button>
+                    </div>
+                `;
+            } 
+            // Optional: If you want the bill area visible, uncomment this
+            /*
+            else {
+                 billDisplayArea.classList.remove('hidden');
+                 billContent.innerHTML = '<p class="text-gray-400">No new bill notification. View history for past bills.</p>';
+            }
+            */
+            
+        } catch (error) {
+            console.error('Status check error:', error);
+            // Ignore errors for status check to prevent interrupting dashboard loading
+        }
+    }
+
+    // Run the check when the page loads
+    checkBillStatus();
+</script>
 </body>
 </html>

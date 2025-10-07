@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
-  
+
   <!-- Sidebar -->
   <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
     <nav class="flex-1 px-4 md:px-8">
@@ -17,7 +17,7 @@
       </h2>
       <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
         <li>
-          <a href="/admin/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition ">
+          <a href="/admin/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
             <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
           </a>
         </li>
@@ -28,7 +28,7 @@
         </li>
         <li>
           <a href="expense-log" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
-            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Expense Log</span>
+            <i class="fas fa-receipt text-[#E94560]"></i><span class="hidden sm:inline">Expense Log</span>
           </a>
         </li>
         <li>
@@ -48,13 +48,12 @@
         </li>
         <li>
           <a href="give-notification" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Give Notification</span>
+            <i class="fas fa-bullhorn text-[#E94560]"></i><span class="hidden sm:inline">Give Notification</span>
           </a>
-        </li>
         </li>
         <li>
           <a href="upload-sheet" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Upload Students List</span>
+            <i class="fas fa-upload text-[#E94560]"></i><span class="hidden sm:inline">Upload Students List</span>
           </a>
         </li>
       </ul>
@@ -82,11 +81,15 @@
     </header>
 
     <!-- Expense Log Section -->
-    <main id="expense-log" class="p-6 flex-1">
-      <h2 class="text-xl font-bold mb-6 text-red-400">Expense Log & Bill Generator</h2>
+    <main id="expense-log" class="p-6 md:p-10 flex-1 overflow-auto">
+  <h2 class="text-xl md:text-2xl font-bold mb-6 text-red-400">Expense Log & Bill Generator</h2>
 
-      <!-- Form -->
-      <form id="expenseForm" class="grid gap-4 max-w-lg">
+  <!-- Flex container for form (left) and latest bill (right) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+    <!-- Left Side: Expense Form -->
+    <div class="bg-[#1A1A2E] p-6 rounded-lg shadow-lg border border-[#0F3460] w-full">
+      <form id="expenseForm" class="grid gap-5">
         <div>
           <label class="block mb-1 text-sm font-semibold">Kitchen Rent</label>
           <input type="number" id="kitchenRent" class="w-full px-3 py-2 rounded-md text-black" placeholder="Enter amount">
@@ -104,9 +107,9 @@
         </button>
       </form>
 
-      <!-- Bill Summary -->
+      <!-- Current Bill Summary -->
       <div id="billSummary" class="mt-8 hidden">
-        <h3 class="text-lg font-semibold mb-4 text-green-400">Bill Summary</h3>
+        <h3 class="text-lg font-semibold mb-4 text-green-400">Current Bill Calculation Summary</h3>
         <table class="w-full border border-[#0F3460] rounded-lg overflow-hidden">
           <thead class="bg-[#0F3460]">
             <tr>
@@ -123,7 +126,109 @@
           </tfoot>
         </table>
       </div>
-    </main>
+    </div>
+
+    <!-- Right Side: Last Generated Bill -->
+    <div class="w-full">
+      {{#if latestBill}}
+      <div class="p-6 bg-[#0F3460] rounded-lg shadow-xl border border-green-500">
+        <h3 class="text-lg font-semibold text-green-400 mb-3">Last Generated Bill ({{latestBill.monthYear}})</h3>
+        <div class="space-y-2 text-sm text-gray-300">
+          <p>Total Monthly Expense: <span class="font-bold text-lg text-white">₹{{latestBill.totalExpense}}</span></p>
+          <p>Rate per Present Day: <span class="font-bold text-lg text-green-300">₹{{latestBill.ratePerDay}}</span></p>
+          <p class="text-xs text-gray-400 mt-2">Billed for {{latestBill.usersBilledCount}} students</p>
+          <p class="text-xs text-gray-400">Generated on {{latestBill.formattedDate}}</p>
+        </div>
+      </div>
+      {{else}}
+      <div class="p-6 bg-[#0F3460] rounded-lg shadow-xl border border-yellow-500">
+        <p class="text-yellow-300 text-sm">
+          No previous bill found. Enter expenses and click 'Generate Bill' to create the first monthly cycle.
+        </p>
+      </div>
+      {{/if}}
+    </div>
+
   </div>
+</main>
+
+  </div>
+
+  <script>
+    // Utility to format numbers as currency
+    function formatCurrency(amount) {
+        return '₹' + new Intl.NumberFormat('en-IN').format(amount);
+    }
+
+    // Function called by the "Generate Bill" button
+    async function generateBill() {
+        // 1. Get expense inputs
+        const kitchenRent = parseFloat(document.getElementById('kitchenRent').value) || 0;
+        const kitchenExpense = parseFloat(document.getElementById('kitchenExpense').value) || 0;
+        const staffSalary = parseFloat(document.getElementById('staffSalary').value) || 0;
+
+        // Basic validation
+        if (kitchenRent <= 0 && kitchenExpense <= 0 && staffSalary <= 0) {
+            alert('Please enter at least one expense amount.');
+            return;
+        }
+
+        const totalExpense = kitchenRent + kitchenExpense + staffSalary;
+
+        // 2. Display the Bill Summary table on the client-side
+        const billTableBody = document.getElementById('billTable');
+        billTableBody.innerHTML = ''; // Clear previous entries
+
+        const expenses = [
+            { type: "Kitchen Rent", amount: kitchenRent },
+            { type: "Kitchen Expense", amount: kitchenExpense },
+            { type: "Staff Salary", amount: staffSalary }
+        ];
+
+        expenses.forEach(exp => {
+            if (exp.amount > 0) {
+                billTableBody.innerHTML += `
+                    <tr class="hover:bg-[#0f3460]/50">
+                        <td class="px-4 py-2">${exp.type}</td>
+                        <td class="px-4 py-2 text-right">${formatCurrency(exp.amount)}</td>
+                    </tr>
+                `;
+            }
+        });
+
+        document.getElementById('totalAmount').textContent = formatCurrency(totalExpense);
+        document.getElementById('billSummary').classList.remove('hidden');
+
+        // 3. Prompt admin for confirmation before sending to the server
+        const confirmSend = confirm(`Total calculated expense is ${formatCurrency(totalExpense)}. Do you want to process this bill for all students and save it?`);
+        
+        if (confirmSend) {
+            // 4. Send the expenses to the server to calculate and save the per-user bill
+            try {
+                const response = await fetch('/admin/generate-bill', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ kitchenRent, kitchenExpense, staffSalary, totalExpense }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Bill successfully processed and saved for all ${result.usersUpdated} students. Bill per present day: ${formatCurrency(result.ratePerPresentDay)}`);
+                    // ✅ ADD THIS LINE: Reload the page to fetch the updated 'latestBill' data
+                    window.location.reload(); 
+                } else {
+                    alert(`❌ Error processing bill: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('A network error occurred while processing the bill.');
+            }
+        }
+    }
+  </script>
+
 </body>
 </html>

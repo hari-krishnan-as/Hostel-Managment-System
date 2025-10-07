@@ -163,25 +163,39 @@ app.post("/request", async (req, res) => {
 
 // Login user
 app.post("/login", async (req, res) => {
-  try {
-    const user = await User.findOne({ hostelid: req.body.hostelid });
-    if (!user) {
-      return res.send("<script>alert('User not found'); window.location.href='/login';</script>");
-    }
+  try {
+    const { hostelid, password } = req.body;
 
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
-    if (!isMatch) {
-      return res.send("<script>alert('Wrong Password'); window.location.href='/login';</script>");
-    }
+    // Find user by hostelid
+    const user = await User.findOne({ hostelid });
+    if (!user) {
+      return res.send("<script>alert('User not found'); window.location.href='/login';</script>");
+    }
 
-   req.session.userId = user.hostelid;
-   if (user.role === "admin") return res.redirect("/admin/dashboard");
-    else return res.redirect("/user/dashboard");
-  } catch (err) {
-    // console.error("Login error:", err.message); // removed
-    res.status(500).send("Internal Server Error");
-  }
+    // Compare password using bcrypt
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.send("<script>alert('Wrong password'); window.location.href='/login';</script>");
+    }
+
+    // ✅ Store only hostelid (not full user object)
+    req.session.userId = user.hostelid;
+
+    // ✅ (Optional but recommended) Store role for route-level protection
+    req.session.role = user.role;
+
+    // Redirect based on role
+    if (user.role === "admin") {
+      return res.redirect("/admin/dashboard");
+    } else {
+      return res.redirect("/user/dashboard");
+    }
+  } catch (err) {
+    console.error("Login error:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
 });
+
 
 // Logout
 app.get("/logout", (req, res) => {
