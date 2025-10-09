@@ -5,7 +5,10 @@ const loginSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     department: { type: String, required: true, trim: true },
     program: { type: String, required: true, trim: true },
-    semester: { type: Number, required: true, min: 1, max: 10 },
+    
+    // --- REMOVED: semester field ---
+    // semester: { type: Number, required: true, min: 1, max: 10 },
+    
     hostelid: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
 
@@ -13,10 +16,10 @@ const loginSchema = new mongoose.Schema(
     registrationDate: { type: Date, default: Date.now },
     isApproved: { type: Boolean, default: false },
 
-    // ✅ Re-added: Flag to signal a new bill has been generated
-    needsBillRefresh: { type: Boolean, default: false },
+    // Flag to signal a new bill has been generated
+    needsBillRefresh: { type: Boolean, default: false },
 
-    // ✅ Leave tracking
+    // Leave tracking
     leaves: [
       {
         from: { type: Date, required: true },
@@ -26,7 +29,7 @@ const loginSchema = new mongoose.Schema(
       }
     ],
 
-    // ✅ Complaints
+    // Complaints
     complaints: [
       {
         text: { type: String, required: true, trim: true },
@@ -35,7 +38,7 @@ const loginSchema = new mongoose.Schema(
       }
     ],
 
-    // ✅ Suggestions
+    // Suggestions
     suggestions: [
       {
         text: { type: String, required: true, trim: true },

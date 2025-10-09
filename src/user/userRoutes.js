@@ -6,82 +6,64 @@ const Notification = require("../../models/notification");
 
 // ---------------- Utility: Attendance (FIXED: Moved to top) ----------------
 function calculateMonthlyAttendance(registrationDate, leaves = []) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
-  
-  const regDate = new Date(registrationDate);
-  regDate.setHours(0, 0, 0, 0); // Normalize registration date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // Safety check: If registration is in the future, return 0 attendance.
-  if (regDate > today) {
-    return {
-      cycleStart: today.toDateString(),
-      cycleEnd: today.toDateString(),
-      presentDays: 0,
-      messCutDays: 0,
-      waitingApprovalDays: 0,
-      totalDays: 0
-    };
-  }
+  const regDate = new Date(registrationDate);
+  regDate.setHours(0, 0, 0, 0);
 
-  // Define current date components
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  // If registration date invalid or in future
+  if (isNaN(regDate) || regDate > today) {
+    return {
+      presentDays: 0,
+      messCutDays: 0,
+      waitingApprovalDays: 0,
+      totalDays: 0
+    };
+  }
 
-  // 1. Determine the Cycle Start Date (Start of the attendance period)
-  let cycleStart = new Date(currentYear, currentMonth, 1);
-  cycleStart.setHours(0, 0, 0, 0);
+  // 🔹 Get 1st day of current month
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  // Rule: If registration happened in the *current* month, attendance starts on the Reg Date.
-  // Otherwise, it starts on the 1st of the current calendar month.
-  if (regDate.getFullYear() === currentYear && regDate.getMonth() === currentMonth) {
-    cycleStart = regDate;
-  }
+  // 🔹 Start counting from whichever is later: registration date or first day of this month
+  const effectiveStart = regDate > firstDayOfMonth ? regDate : firstDayOfMonth;
 
-  // Attendance is always calculated up to the end of today.
-  const cycleEnd = today;
+  // 🔹 Total days from effective start to today (inclusive)
+  const totalDays = Math.floor((today - effectiveStart) / (1000 * 60 * 60 * 24)) + 1;
 
-  // 3. Calculate Total Days in the Cycle (inclusive)
-  const totalDays = Math.floor((cycleEnd.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  // 🏷️ Calculate leaves
+  let messCutDays = 0;
+  let waitingApprovalDays = 0;
 
-  let messCutDays = 0;
-  let waitingApprovalDays = 0;
+  for (const leave of leaves) {
+    const leaveFrom = new Date(leave.from);
+    const leaveTo = new Date(leave.to);
+    leaveFrom.setHours(0, 0, 0, 0);
+    leaveTo.setHours(0, 0, 0, 0);
 
-  // 4. Count leave days that overlap with the current cycle [cycleStart, cycleEnd]
-  leaves.forEach((leave) => {
-    const leaveFrom = new Date(leave.from);
-    leaveFrom.setHours(0, 0, 0, 0);
-    const leaveTo = new Date(leave.to);
-    leaveTo.setHours(0, 0, 0, 0);
+    // Clip leave range to [effectiveStart, today]
+    const from = leaveFrom < effectiveStart ? effectiveStart : leaveFrom;
+    const to = leaveTo > today ? today : leaveTo;
 
-    // Clip leave interval: the leave can only count if it falls between cycleStart and cycleEnd
-    const from = leaveFrom < cycleStart ? cycleStart : leaveFrom;
-    const to = leaveTo > cycleEnd ? cycleEnd : leaveTo;
+    if (from <= to) {
+      const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+      if (leave.approved) messCutDays += diff;
+      else waitingApprovalDays += diff;
+    }
+  }
 
-    // Check if there is any overlap
-    if (from <= to) {
-      // Calculate difference in days (inclusive)
-      const diff = Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const presentDays = totalDays - (messCutDays + waitingApprovalDays);
 
-      if (leave.approved) messCutDays += diff; 
-      else waitingApprovalDays += diff; 
-    }
-  });
-
-  // 5. Calculate Present Days
-  // Present Days = Total Expected Days - (Approved Leaves + Pending Leaves)
-  const presentDays = totalDays - (messCutDays + waitingApprovalDays);
-
-  return {
-    cycleStart: cycleStart.toDateString(),
-    cycleEnd: cycleEnd.toDateString(),
-    presentDays,
-    messCutDays,
-    waitingApprovalDays,
-    totalDays
-  };
+  return {
+    presentDays,
+    messCutDays,
+    waitingApprovalDays,
+    totalDays,
+    cycleStart: effectiveStart.toDateString(),
+    cycleEnd: today.toDateString()
+  };
 }
-// ---------------- END Utility: Attendance ----------------
+
 
 
 // ---------------- Middleware ----------------

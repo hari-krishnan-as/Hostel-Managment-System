@@ -16,7 +16,7 @@ const isAuthenticated = (req, res, next) => {
   else res.redirect("/login");
 };
 
-// --- START: NEW EXCEL UPLOAD ROUTES (UNCHANGED) ---
+// --- START: NEW EXCEL UPLOAD ROUTES ---
 
 // 3. GET: Display upload form 
 router.get("/upload-sheet", isAuthenticated, async (req, res) => {
@@ -28,50 +28,88 @@ router.get("/upload-sheet", isAuthenticated, async (req, res) => {
   }
 });
 
-// 4. POST: Handle file upload, parsing, and data storage
+// 4. POST: Handle file upload, parsing, and data storage (FIXED)
 router.post("/upload-sheet", isAuthenticated, upload.single("registrationFile"), async (req, res) => {
-  // Security check
   const admin = await User.findOne({ hostelid: req.session.userId });
   if (!admin || admin.role !== "admin") return res.redirect("/login");
 
   if (!req.file) {
     return res.send("<script>alert('No file uploaded.'); window.location.href='/admin/upload-sheet';</script>");
   }
-    
-  try {
-    // Read the file buffer from multer
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
-    const sheetName = workbook.SheetNames[0]; 
-    let rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    // Aggressively clean and normalize the data (same logic as in the old index.js)
-    const cleanedData = rawData.map(record => {
-        const cleanedRecord = {};
+  try {
+    // Read workbook from buffer (we handle dates manually, so cellDates: false)
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer", cellDates: false });
+    const sheetName = workbook.SheetNames[0];
+    // Use defval: "" to ensure empty cells result in an empty string
+    const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+
+    // Helper function to get trimmed data value by column name, ignoring case/whitespace
+    const getValue = (record, name) => {
+        const lowerName = name.toLowerCase().replace(/\s/g, '');
         for (const key in record) {
-            if (typeof record[key] === 'string') {
-                cleanedRecord[key] = record[key].trim();
-            } else if (record[key] instanceof Date) {
-                cleanedRecord[key] = cleanedRecord[key] = new Date(Date.UTC(record[key].getFullYear(), record[key].getMonth(), record[key].getDate()));
-            } else {
-                cleanedRecord[key] = record[key];
+            if (key.toLowerCase().replace(/\s/g, '') === lowerName) {
+                return String(record[key]).trim();
             }
         }
+        return "";
+    };
+
+
+    const cleanedData = rawData.map((record) => {
+        const cleanedRecord = {};
+        
+        // --- 1. Identify and Standardize Core Fields (Keys must be capitalized for index.js) ---
+        cleanedRecord.Name = getValue(record, "Name");
+        cleanedRecord.Department = getValue(record, "Department");
+        cleanedRecord.Program = getValue(record, "Program");
+        
+        // --- 2. Parse and Standardize Registration Date ---
+        let dateValue = getValue(record, "RegistrationDate");
+        let finalDate = null;
+        
+        if (typeof dateValue === "string" && dateValue.trim() !== "") {
+            
+            // Check for Excel serial number *first* if the value looks like a number
+            const numValue = parseFloat(dateValue);
+            if (!isNaN(numValue) && numValue > 1000) { 
+                const parsed = XLSX.SSF.parse_date_code(numValue);
+                finalDate = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+            } else {
+                // Case: Ambiguous string date (DD-MM-YYYY / DD/MM/YYYY)
+                const parts = dateValue.trim().split(/[-\/ ]/);
+                if (parts.length === 3) {
+                    const [day, month, year] = parts.map((v) => parseInt(v));
+                    
+                    if (day >= 1 && month >= 1 && month <= 12 && year >= 2000) {
+                        // Force DD-MM-YYYY and create UTC date object
+                        finalDate = new Date(Date.UTC(year, month - 1, day)); 
+                    }
+                }
+            }
+        }
+        
+        // Assign final Date object (or null if invalid)
+        // This key must be capitalized to match index.js
+        cleanedRecord.RegistrationDate = finalDate && !isNaN(finalDate.getTime()) ? finalDate : null;
+
         return cleanedRecord;
     });
-    
-    // Store the parsed data in app.locals for the main application to use
-    req.app.locals.registrationData = cleanedData;
-    console.log(`✅ Excel sheet successfully loaded and parsed. Total records: ${cleanedData.length}`);
 
-    return res.send("<script>alert('Registration sheet uploaded and data updated successfully. Total records loaded: " + cleanedData.length + "'); window.location.href='/admin/dashboard';</script>");
+    // Save the parsed data in app.locals
+    req.app.locals.registrationData = cleanedData.filter(r => r.Name && r.Program); // Filter out empty rows
+    console.log(`✅ Excel parsed successfully. Total records loaded: ${req.app.locals.registrationData.length}`);
 
+    return res.send(
+      `<script>alert('Registration sheet uploaded successfully. Total records: ${req.app.locals.registrationData.length}'); window.location.href='/admin/dashboard';</script>`
+    );
   } catch (error) {
-    console.error("❌ Error processing uploaded Excel sheet:", error.message);
-    return res.send("<script>alert('Error processing file. Please ensure it is a valid Excel file and the format is correct.'); window.location.href='/admin/upload-sheet';</script>");
+    console.error("❌ Error processing Excel sheet:", error.message);
+    return res.send(
+      `<script>alert('Error processing Excel file. Please check the format and ensure columns are named correctly (Name, Department, Program, RegistrationDate).'); window.location.href='/admin/upload-sheet';</script>`
+    );
   }
 });
-
-// --- END: NEW EXCEL UPLOAD ROUTES ---
 
 
 // Admin Dashboard (UNCHANGED)
@@ -265,7 +303,7 @@ function calculateMonthlyAttendance(registrationDate, leaves = []) {
     };
 }
 
-// -------------------- Generate Bill --------------------
+// -------------------- Generate Bill (REVISED LOGIC) --------------------
 router.post("/generate-bill", isAuthenticated, async (req, res) => {
     try {
         // Check admin
@@ -274,9 +312,13 @@ router.post("/generate-bill", isAuthenticated, async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        // Extract expenses
+        // Extract expenses and parse to float
         const { kitchenRent, kitchenExpense, staffSalary, totalExpense } = req.body;
-        const totalMessExpense = parseFloat(totalExpense);
+        
+        const rent = parseFloat(kitchenRent) || 0;
+        const expense = parseFloat(kitchenExpense) || 0;
+        const salary = parseFloat(staffSalary) || 0;
+        const totalMessExpense = parseFloat(totalExpense); // Use provided total for record keeping
 
         if (isNaN(totalMessExpense) || totalMessExpense <= 0) {
             return res.status(400).json({ success: false, message: "Invalid total expense amount." });
@@ -296,6 +338,16 @@ router.post("/generate-bill", isAuthenticated, async (req, res) => {
 
         // Fetch all students
         const allStudents = await User.find({ role: { $ne: 'admin' } });
+        const totalRegisteredStudents = allStudents.length;
+
+        if (totalRegisteredStudents === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No students registered. Bill not generated.",
+                usersUpdated: 0,
+                ratePerPresentDay: 0
+            });
+        }
 
         let totalPresentDaysAcrossAllUsers = 0;
         const studentAttendance = [];
@@ -307,65 +359,77 @@ router.post("/generate-bill", isAuthenticated, async (req, res) => {
             studentAttendance.push({ studentId: student._id, presentDays });
         }
 
-        if (totalPresentDaysAcrossAllUsers === 0) {
-            return res.status(200).json({
-                success: true,
-                message: "No attendance found this month. Bill not generated.",
-                usersUpdated: 0,
-                ratePerPresentDay: 0
-            });
+        // --- START: REVISED BILL CALCULATION ---
+        
+        // 1. Fixed Cost Share (Rent + Salary)
+        const fixedCost = rent + salary;
+        const fixedSharePerUser = totalRegisteredStudents > 0 ? fixedCost / totalRegisteredStudents : 0;
+        
+        // 2. Variable Cost Rate (Kitchen Expense)
+        let variableRatePerDay = 0;
+        if (totalPresentDaysAcrossAllUsers > 0) {
+            variableRatePerDay = expense / totalPresentDaysAcrossAllUsers;
         }
-
-        const ratePerPresentDay = totalMessExpense / totalPresentDaysAcrossAllUsers;
-
+        
+        // We will store the Variable Rate Per Day in the Expense model
+        const ratePerDayToStore = variableRatePerDay; 
+        
+        // --- END: REVISED BILL CALCULATION ---
+        
         // Save expense record
         const newExpense = new Expense({
             date: now,
             monthYear,
-            kitchenRent: parseFloat(kitchenRent),
-            kitchenExpense: parseFloat(kitchenExpense),
-            staffSalary: parseFloat(staffSalary),
+            kitchenRent: rent,
+            kitchenExpense: expense,
+            staffSalary: salary,
             totalExpense: totalMessExpense,
-            ratePerDay: ratePerPresentDay,
-            usersBilledCount: studentAttendance.length
+            ratePerDay: ratePerDayToStore, // Storing variable cost
+            usersBilledCount: totalRegisteredStudents 
         });
 
         await newExpense.save();
 
-        // ---------------------- FIX: Bulk Update & Set Signal Flag ----------------------
+        // ---------------------- Bulk Update & Set Signal Flag ----------------------
         
         let usersUpdatedCount = 0;
-        const billedStudents = studentAttendance.filter(rec => rec.presentDays > 0);
 
-        const bulkOperations = billedStudents.map(record => {
-            const studentBill = Math.round(record.presentDays * ratePerPresentDay);
-            
-            return {
-                updateOne: {
-                    filter: { _id: record.studentId },
-                    update: {
-                        $push: { 
-                            billingHistory: {
-                                date: now,
-                                totalExpense: totalMessExpense,
-                                studentShare: studentBill,
-                                presentDays: record.presentDays,
-                                ratePerDay: ratePerPresentDay
-                            }
-                        },
-                        // ✅ Set the signal flag to true for all billed students
-                        $set: { needsBillRefresh: true } 
-                    }
-                }
-            };
-        });
+        const bulkOperations = allStudents.map(record => {
+            // Find the corresponding attendance record
+            const studentRec = studentAttendance.find(a => a.studentId.equals(record._id));
+            const presentDays = studentRec ? studentRec.presentDays : 0;
+            
+            // Calculate final bill for this student
+            const variableComponent = presentDays * variableRatePerDay;
+            const studentBill = Math.round(fixedSharePerUser + variableComponent);
+            
+            return {
+                updateOne: {
+                    filter: { _id: record._id },
+                    update: {
+                        $push: { 
+                            billingHistory: {
+                                date: now,
+                                totalExpense: totalMessExpense,
+                                studentShare: studentBill,
+                                presentDays: presentDays,
+                                // Record the total calculated bill to simplify future checks
+                                ratePerDay: ratePerDayToStore 
+                            }
+                        },
+                        // Set the signal flag to true for all students
+                        $set: { needsBillRefresh: true } 
+                    }
+                }
+            };
+        });
 
-        if (bulkOperations.length > 0) {
-            const result = await User.bulkWrite(bulkOperations);
-            usersUpdatedCount = result.modifiedCount;
-        } else {
-            usersUpdatedCount = 0; 
-        }
+        if (bulkOperations.length > 0) {
+            const result = await User.bulkWrite(bulkOperations);
+            usersUpdatedCount = result.modifiedCount;
+        } else {
+            usersUpdatedCount = 0; 
+        }
 
         // -----------------------------------------------------------------------------
 
@@ -373,7 +437,7 @@ router.post("/generate-bill", isAuthenticated, async (req, res) => {
             success: true,
             message: "Bill generated successfully.",
             usersUpdated: usersUpdatedCount,
-            ratePerPresentDay: ratePerPresentDay.toFixed(2)
+            ratePerPresentDay: ratePerDayToStore.toFixed(2)
         });
 
     } catch (err) {

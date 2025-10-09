@@ -26,8 +26,7 @@ let registrationData = [];
 // This is where the admin upload route will store the parsed data.
 app.locals.registrationData = registrationData; 
 
-// --- REMOVED: Hard-coded Excel Loading Block ---
-// The old try...catch block that loaded the file from a fixed path is removed.
+
 
 // Middleware
 app.use(express.json());
@@ -79,12 +78,13 @@ app.post("/request", async (req, res) => {
     const currentRegistrationData = app.locals.registrationData || []; 
 
     if (currentRegistrationData.length === 0) {
-      return res.send("<script>alert('Registration sheet has not been loaded by the admin. Please try again later.'); window.location.href='/request';</script>");
+      return res.send("<script>alert('Student not found in registration sheet uploaded by the admin. Please try again later.'); window.location.href='/request';</script>");
     }
 
+    // Removed 'semester' from destructuring
     const { name, department, program, password, role } = req.body;
 
-    // 1. DIAGNOSTIC FIND: Try to find user by NAME ONLY
+    // 1. Try to find user by NAME ONLY
     const excelUser = currentRegistrationData.find(
       (record) => String(record.Name || '').toLowerCase() === name.toLowerCase()
     );
@@ -93,7 +93,7 @@ app.post("/request", async (req, res) => {
       return res.send("<script>alert('Your Name does not match any pending registration record.'); window.location.href='/request';</script>");
     }
     
-    // --- DIAGNOSTIC CHECK: User found by name, now check department/program ---
+    // Check department/program
     const excelDept = String(excelUser.Department || '').toLowerCase();
     const excelProgramStr = String(excelUser.Program || '').toLowerCase();
     
@@ -104,8 +104,8 @@ app.post("/request", async (req, res) => {
     // --- START: HosteliD Pre-checks and Generation ---
     const excelRegDateValue = excelUser.RegistrationDate;
 
-    if (!excelProgramStr || !excelRegDateValue) {
-        return res.send("<script>alert('Internal registration data is incomplete. Missing Program or Registration Date in Excel.'); window.location.href='/request';</script>");
+    if (!excelProgramStr || !excelRegDateValue || (excelRegDateValue instanceof Date && isNaN(excelRegDateValue.getTime()))) {
+        return res.send("<script>alert('Internal registration data is incomplete. Missing Program or Registration Date in Excel, or date is invalid.'); window.location.href='/request';</script>");
     }
 
     const rawDate = (excelRegDateValue instanceof Date) ? excelRegDateValue : new Date(excelRegDateValue);
@@ -114,29 +114,26 @@ app.post("/request", async (req, res) => {
         return res.send("<script>alert('Internal registration date format is invalid.'); window.location.href='/request';</script>");
     }
     
-    // ✅ FIX: Use Date.UTC() to construct the date object. This prevents the local 
-    // timezone offset from shifting the calendar day when saving to MongoDB.
+    // FIX: Use Date.UTC() to construct the date object.
     const regDate = new Date(Date.UTC(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
     
     // Use getUTCFullYear() to retrieve the correct year for the Hostel ID prefix
     const currentYearLastTwo = regDate.getUTCFullYear().toString().slice(-2);
     const nameSlug = String(excelUser.Name || name).toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    // ✅ FINAL HOSTEL ID FORMAT: SNG + Year + Program + FullNameSlug (e.g., SNG25MCAshon)
+    // FINAL HOSTEL ID FORMAT: SNG + Year + Program + FullNameSlug
     const generatedHostelid = `SNG${currentYearLastTwo}${excelProgramStr.toUpperCase()}${nameSlug}`; 
 
-    // --- START: SAFE SEMESTER ASSIGNMENT ---
-    let semesterValue = excelUser.Semester || req.body.semester;
-    if (typeof semesterValue !== 'number' || isNaN(semesterValue)) {
-        semesterValue = 1; 
-    }
+    // --- START: SEMESTER ASSIGNMENT (Default to 1) ---
+    // Excel data might have a semester, but we default to 1 as per the new form
+    let semesterValue = 1; 
 
     // 3. Prepare the final data object
     data = { 
       name: excelUser.Name,
       department: excelUser.Department,
       program: excelUser.Program, 
-      semester: semesterValue, 
+      semester: semesterValue, // Hardcoded to 1
       
       hostelid: generatedHostelid, 
       password: await bcrypt.hash(password, 10),
@@ -156,44 +153,44 @@ app.post("/request", async (req, res) => {
     res.send(`<script>alert('Registration successful! Your Hostel ID is: ${data.hostelid}. Please log in.'); window.location.href='/login';</script>`);
 
   } catch (err) {
-    // All error console.logs removed
+    console.error("Registration Error:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
 // Login user
 app.post("/login", async (req, res) => {
-  try {
-    const { hostelid, password } = req.body;
+  try {
+    const { hostelid, password } = req.body;
 
-    // Find user by hostelid
-    const user = await User.findOne({ hostelid });
-    if (!user) {
-      return res.send("<script>alert('User not found'); window.location.href='/login';</script>");
-    }
+    // Find user by hostelid
+    const user = await User.findOne({ hostelid });
+    if (!user) {
+      return res.send("<script>alert('User not found'); window.location.href='/login';</script>");
+    }
 
-    // Compare password using bcrypt
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.send("<script>alert('Wrong password'); window.location.href='/login';</script>");
-    }
+    // Compare password using bcrypt
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.send("<script>alert('Wrong password'); window.location.href='/login';</script>");
+    }
 
-    // ✅ Store only hostelid (not full user object)
-    req.session.userId = user.hostelid;
+    // Store only hostelid (not full user object)
+    req.session.userId = user.hostelid;
 
-    // ✅ (Optional but recommended) Store role for route-level protection
-    req.session.role = user.role;
+    // (Optional but recommended) Store role for route-level protection
+    req.session.role = user.role;
 
-    // Redirect based on role
-    if (user.role === "admin") {
-      return res.redirect("/admin/dashboard");
-    } else {
-      return res.redirect("/user/dashboard");
-    }
-  } catch (err) {
-    console.error("Login error:", err.message);
-    res.status(500).send("Internal Server Error");
-  }
+    // Redirect based on role
+    if (user.role === "admin") {
+      return res.redirect("/admin/dashboard");
+    } else {
+      return res.redirect("/user/dashboard");
+    }
+  } catch (err) {
+    console.error("Login error:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 
