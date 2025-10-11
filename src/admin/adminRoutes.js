@@ -225,23 +225,23 @@ router.get("/view-suggestion", isAuthenticated, async (req, res) => {
   res.render("admin/view-suggestion", { users });
 });
 
-// Give notification page (UNCHANGED)
+// Give notification page
 router.get("/give-notification", isAuthenticated, async (req, res) => {
-  const notifications = await Notification.find().sort({ _id: -1 });
-  res.render("admin/give-notification", { notifications });
+  const notifications = await Notification.find().sort({ _id: -1 });
+  res.render("admin/give-notification", { notifications });
 });
 
-// POST notification (UNCHANGED)
+// POST notification
 router.post("/give-notification", isAuthenticated, async (req, res) => {
-  const { message } = req.body;
-  await Notification.create({ message });
-  res.redirect("/admin/give-notification");
+  const { message } = req.body;
+  await Notification.create({ message });
+  res.redirect("/admin/give-notification");
 });
 
-// Delete notification (UNCHANGED)
+// Delete notification
 router.post("/delete-notification/:id", isAuthenticated, async (req, res) => {
-  await Notification.findByIdAndDelete(req.params.id);
-  res.redirect("/admin/give-notification");
+  await Notification.findByIdAndDelete(req.params.id);
+  res.redirect("/admin/give-notification");
 });
 
 // --- UTILITY: ATTENDANCE CALCULATION FOR BILLING (UNCHANGED) ---
@@ -509,7 +509,5 @@ router.get("/payment-log", isAuthenticated, async (req, res) => {
         res.render("admin/payment-log", { payments: [], error: "Database error loading payment history." });
     }
 });
-
-
 
 module.exports = router;

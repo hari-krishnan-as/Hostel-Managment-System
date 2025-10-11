@@ -1,408 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mess Bill Overview</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mess Bill Overview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
-    
-    <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
-        <nav class="flex-1 px-4 md:px-8">
-            <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
-                Dashboard
-            </h2>
-            <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
-                <li>
-                    <a href="/user/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-                        <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/attendance" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-                        <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Attendance</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/mess-bill" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
-                        <i class="fas fa-receipt text-[#E94560]"></i><span class="hidden sm:inline">Mess Bill</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/mess-cut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-                        <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Mess Cut Leave</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/complaints" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-                        <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">Complaints</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/user/suggestions" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
-                        <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Suggestions</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="px-4 md:px-8 mt-2 md:mt-auto">
-            <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
-                <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <div class="flex flex-col flex-1">
-        
-        <header class="w-full flex items-center justify-between py-4 px-6 bg-[#0F3460] text-white">
-            <button id="menu-btn" class="md:hidden focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
-
-            <div class="flex items-center space-x-6 ml-auto">
-                <a href="/user/notifications" class="relative hover:text-gray-400 transition focus:outline-none">
-                    <i class="fas fa-bell text-lg"></i>
-                    {{#if notificationCount}}
-                        <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                            {{notificationCount}}
-                        </span>
-                    {{/if}}
-                </a>
-
-                <a href="/user/settings" class="hover:text-gray-400 transition">
-                    <i class="fas fa-cog text-lg"></i>
-                </a>
-                <a href="/user/profile" class="hover:text-gray-400 transition">
-                    <i class="fas fa-user-circle text-lg"></i>
-                </a>
-            </div>
-        </header>
-
-        <main id="mess-bill-main" class="p-6 flex-1">
-            <h2 class="text-xl font-bold mb-6 text-pink-500 flex items-center space-x-2">
-                <i class="fas fa-receipt"></i><span>Mess Bill Overview</span>
-            </h2>
-            
-            <div id="bill-status-area" class="mb-8 max-w-xl mx-auto">
-                <p class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Checking for bills...</p>
-            </div>
-
-            <div id="history-table-container" class="hidden transition-opacity duration-300">
-                
-                <h3 class="text-xl font-semibold mb-4 text-red-300 flex items-center space-x-2 pt-4 border-t border-[#0F3460] mt-4">
-                    <i class="fas fa-history"></i><span>Full History Log</span>
-                </h3>
-
-                {{#if bills}}
-                    <div class="overflow-x-auto bg-[#1A1A2E] rounded-lg shadow-lg">
-                        <table class="min-w-full divide-y divide-[#0F3460]">
-                            <thead class="bg-[#0F3460]">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
-                                        Billing Cycle
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">
-                                        Your Bill
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">
-                                        Present Days
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white hidden sm:table-cell">
-                                        Rate Per Day
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white hidden lg:table-cell">
-                                        Total Expense
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-[#0F3460]">
-                                {{#each bills}}
-                                    <tr class="hover:bg-[#16213E] transition duration-150">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-300">
-                                            {{this.displayDate}}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-400">
-                                            {{this.formattedShare}}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                                            {{this.presentDays}}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right hidden sm:table-cell">
-                                            {{this.formattedRate}}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right hidden lg:table-cell">
-                                            {{this.formattedTotalExpense}}
-                                        </td>
-                                    </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                    </div>
-                {{else}}
-                    <div class="bg-[#0F3460] p-4 rounded-md text-center mt-8">
-                        <p class="text-lg text-gray-300">No mess bill history found yet.</p>
-                        <p class="text-sm text-gray-400 mt-2">The administrator generates the bill at the end of the month.</p>
-                    </div>
-                {{/if}}
-            </div>
-        </main>
+  
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-4 md:px-8">
+      <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
+        Dashboard
+      </h2>
+      <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
+        <li><a href="/user/dashboard" class="flex items-center space-x-3 p-2 pl-3 rounded-md hover:bg-[#0F3460] transition"><i class="fas fa-home text-[#E94560]"></i><span>Home</span></a></li>
+        <li><a href="/user/attendance" class="flex items-center space-x-3 p-2 pl-3 rounded-md hover:bg-[#0F3460] transition"><i class="fas fa-user-check text-[#E94560]"></i><span>Attendance</span></a></li>
+        <li><a href="/user/mess-bill" class="flex items-center space-x-3 p-2 pl-3 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]"><i class="fas fa-receipt text-[#E94560]"></i><span>Mess Bill</span></a></li>
+        <li><a href="/user/mess-cut" class="flex items-center space-x-3 p-2 pl-3 rounded-md hover:bg-[#0F3460] transition"><i class="fas fa-utensils text-[#E94560]"></i><span>Mess Cut Leave</span></a></li>
+        <li><a href="/user/complaints" class="flex items-center space-x-3 p-2 pl-3 rounded-md hover:bg-[#0F3460] transition"><i class="fas fa-exclamation-circle text-[#E94560]"></i><span>Complaints</span></a></li>
+        <li><a href="/user/suggestions" class="flex items-center space-x-3 p-2 pl-3 rounded-md hover:bg-[#0F3460] transition"><i class="fas fa-lightbulb text-[#E94560]"></i><span>Suggestions</span></a></li>
+      </ul>
+    </nav>
+    <div class="px-4 md:px-8 mt-2 md:mt-auto">
+      <a href="/logout" class="flex items-center space-x-3 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition"><i class="fas fa-sign-out-alt"></i><span class="font-semibold">Log Out</span></a>
     </div>
+  </aside>
 
-    <script>
-        const statusArea = document.getElementById('bill-status-area');
-        const historyTableContainer = document.getElementById('history-table-container');
+  <!-- Main Section -->
+  <div class="flex flex-col flex-1">
+    <header class="w-full flex items-center justify-between py-4 px-6 bg-[#0F3460] text-white">
+      <button id="menu-btn" class="md:hidden focus:outline-none">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
 
-        // --- Razorpay Configuration (Use your actual Test Key) ---
-        // *** This line is fixed with your key ***
-        const RAZORPAY_KEY_ID = 'rzp_test_RS7N4gK5yMwA9E'; 
-        const PAYMENT_ENDPOINT = '/user/pay-bill'; 
-        // --------------------------------------------------------
+      <div class="flex items-center space-x-6 ml-auto">
+        <a href="/user/notifications" class="relative hover:text-gray-400 transition focus:outline-none">
+          <i class="fas fa-bell text-lg"></i>
+          {{#if notificationCount}}
+          <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            {{notificationCount}}
+          </span>
+          {{/if}}
+        </a>
+        <a href="/user/settings" class="hover:text-gray-400 transition"><i class="fas fa-cog text-lg"></i></a>
+        <a href="/user/profile" class="hover:text-gray-400 transition"><i class="fas fa-user-circle text-lg"></i></a>
+      </div>
+    </header>
 
-        // --- Utility Functions ---
-        
-        // Renders the details of the latest bill prominently
-        function renderLatestBillCard(latestBill, isNewBill) {
-            const cardClass = isNewBill ? 'bg-red-700 border-red-400' : 'bg-[#1A1A2E] border-[#0F3460]';
-            const titleText = isNewBill ? 'NEW BILL GENERATED!' : 'Latest Bill Summary';
-            const titleColor = isNewBill ? 'text-white' : 'text-pink-500';
+    <main id="mess-bill-main" class="p-6 flex-1">
+      <h2 class="text-xl font-bold mb-6 text-pink-500 flex items-center space-x-2">
+        <i class="fas fa-receipt"></i><span>Mess Bill Overview</span>
+      </h2>
 
-            // 1. Determine the top action button's text and function
-            const topButtonText = isNewBill ? 'View New Bill Details & Clear Notification' : 'Show Full History Log';
-            const topButtonAction = isNewBill ? 'viewAndClearFlag()' : `showFullHistory()`;
-            const topButtonClass = isNewBill ? 'bg-white text-red-700 hover:bg-gray-200' : 'bg-white text-[#0F3460] hover:bg-gray-200';
-            
-            // 2. Determine the Pay Now button state
-            let payNowButtonHTML = '';
-            let statusBadgeHTML = '';
+      <div id="bill-status-area" class="mb-8 max-w-xl mx-auto">
+        <p class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Checking for bills...</p>
+      </div>
 
-            if (latestBill.isPaid) {
-                statusBadgeHTML = '<span class="bg-green-500 text-white text-xs font-extrabold px-3 py-1 rounded-full"><i class="fas fa-check-circle mr-1"></i> PAID</span>';
-                payNowButtonHTML = `
-                    <button disabled class="w-full mt-2 bg-gray-500 text-white px-4 py-2 rounded-md font-bold cursor-not-allowed opacity-75 shadow-md">
-                    <i class="fas fa-wallet mr-2"></i> Bill Paid
-                    </button>
-                `;
-            } else {
-                statusBadgeHTML = isNewBill ? '<span class="bg-yellow-300 text-red-700 text-xs font-extrabold px-3 py-1 rounded-full">NEW</span>' : '';
-                payNowButtonHTML = `
-                    <button onclick="payNow(${latestBill.share}, '${latestBill.displayDate}', ${latestBill.presentDays})" class="w-full mt-2 bg-pink-500 text-[#16213E] px-4 py-2 rounded-md font-bold hover:bg-pink-600 transition shadow-md">
-                    <i class="fas fa-wallet mr-2"></i> Pay Now
-                    </button>
-                `;
-            }
+      <div id="history-table-container" class="hidden transition-opacity duration-300">
+        <h3 class="text-xl font-semibold mb-4 text-red-300 flex items-center space-x-2 pt-4 border-t border-[#0F3460] mt-4">
+          <i class="fas fa-history"></i><span>Full History Log</span>
+        </h3>
 
-            return `
-                <div class="p-6 ${cardClass} rounded-lg shadow-xl border-4 transition-all duration-300">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold ${titleColor}">
-                            <i class="fas fa-receipt mr-2 ${isNewBill ? '' : 'text-pink-500'}"></i> 
-                            ${titleText}
-                        </h3>
-                        ${statusBadgeHTML}
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 border-t ${isNewBill ? 'border-red-500' : 'border-[#0F3460]'} pt-4">
-                        <div>
-                            <p class="text-sm ${isNewBill ? 'text-red-200' : 'text-gray-400'}">Billing Cycle</p>
-                            <p class="text-lg font-semibold">${latestBill.displayDate}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm ${isNewBill ? 'text-red-200' : 'text-gray-400'}">Your Share</p>
-                            <p class="text-2xl font-bold text-green-400">${latestBill.formattedShare}</p>
-                        </div>
-                        <div class="col-span-2">
-                            <p class="text-sm ${isNewBill ? 'text-red-200' : 'text-gray-400'}">Present Days</p>
-                            <p class="text-lg font-semibold">${latestBill.presentDays}</p>
-                        </div>
-                    </div>
-                    
-                    <button onclick="${topButtonAction}" class="w-full mt-6 ${topButtonClass} px-4 py-2 rounded-md font-bold transition shadow-md">
-                        ${topButtonText}
-                    </button>
-                    ${payNowButtonHTML}
-                </div>
-            `;
-        }
-        
-        // This function fetches the latest bill details and resets the flag in the database
-        async function viewAndClearFlag() {
-            statusArea.innerHTML = '<p class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i> Finalizing bill and updating history...</p>';
-            
-            try {
-                // Fetch the bill data which will also reset the needsBillRefresh flag on the server (using findOneAndUpdate)
-                const response = await fetch('/user/fetch-latest-bill-data');
+        {{#if bills}}
+        <div class="overflow-x-auto bg-[#1A1A2E] rounded-lg shadow-lg">
+          <table class="min-w-full divide-y divide-[#0F3460]">
+            <thead class="bg-[#0F3460]">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase text-white">Billing Cycle</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase text-white">Your Bill</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase text-white">Present Days</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase text-white hidden sm:table-cell">Rate/Day</th>
+                <th class="px-6 py-3 text-right text-xs font-medium uppercase text-white hidden lg:table-cell">Total Expense</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#0F3460]">
+              {{#each bills}}
+              <tr class="hover:bg-[#16213E] transition duration-150">
+                <td class="px-6 py-4 text-sm font-medium text-red-300">{{this.displayDate}}</td>
+                <td class="px-6 py-4 text-sm text-right font-bold text-green-400">{{this.formattedShare}}</td>
+                <td class="px-6 py-4 text-sm text-right">{{this.presentDays}}</td>
+                <td class="px-6 py-4 text-sm text-right hidden sm:table-cell">{{this.formattedRate}}</td>
+                <td class="px-6 py-4 text-sm text-right hidden lg:table-cell">{{this.formattedTotalExpense}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <div class="bg-[#0F3460] p-4 rounded-md text-center mt-8">
+          <p class="text-lg text-gray-300">No mess bill history found yet.</p>
+          <p class="text-sm text-gray-400 mt-2">The administrator generates the bill at the end of the month.</p>
+        </div>
+        {{/if}}
+      </div>
+    </main>
+  </div>
 
-                if (response.ok) {
-                    // Success! The flag is reset. Reload the page to force the server 
-                    // to run the HBS template with the fresh data now visible.
-                    window.location.reload(); 
-                } else {
-                    const result = await response.json();
-                    alert(`Error: ${result.message || 'Failed to finalize bill view. Please try again.'}`);
-                    window.location.reload(); 
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                alert('A network error occurred. Please try again.');
-                window.location.reload(); 
-            }
-        }
-        
-        // Function used by the 'Show Full History' button to reveal the table
-        function showFullHistory() {
-             historyTableContainer.classList.remove('hidden');
-             
-             // Scroll to the history section
-             const historyTitle = historyTableContainer.querySelector('h3.text-red-300');
-             if (historyTitle) historyTitle.scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        // --- NEW: RAZORPAY INTEGRATION FUNCTIONS ---
+  <script>
+    const statusArea = document.getElementById('bill-status-area');
+    const historyTableContainer = document.getElementById('history-table-container');
 
-        // 1. Initiates the Razorpay checkout modal
-        async function payNow(amount, billingCycle, presentDays) {
-            // Convert amount to paisa (Razorpay requires integer in the smallest denomination)
-            const amountInPaisa = Math.round(amount * 100);
+    const RAZORPAY_KEY_ID = 'rzp_test_RS7N4gK5yMwA9E';
+    const PAYMENT_ENDPOINT = '/user/pay-bill';
 
-            const options = {
-                key: RAZORPAY_KEY_ID, 
-                amount: amountInPaisa,
-                currency: "INR",
-                name: "Hostel Mess Bill Payment",
-                description: `Payment for ${billingCycle} Mess Bill`,
-                image: "https://i.imgur.com/k28bEaE.png", // Example logo
-                handler: function (response) {
-                    // This function is executed on successful payment (client-side)
-                    recordSuccessfulPayment(response, amount, billingCycle, presentDays);
-                },
-                prefill: {
-                    // Optional: You can pre-fill user details if you have them
-                    // name: "User Name", 
-                    // email: "user@example.com",
-                    // contact: "9999999999"
-                },
-                notes: {
-                    'billing_cycle': billingCycle,
-                    'present_days': presentDays
-                },
-                theme: {
-                    "color": "#E94560" // Matches app's pink theme
-                }
-            };
-            
-            // Check if the Razorpay script is loaded before opening the checkout
-            if (typeof Razorpay === 'undefined') {
-                alert('Payment processor not loaded. Please refresh the page.');
-                return;
-            }
+    // Render latest bill card
+    function renderLatestBillCard(latestBill, isNewBill) {
+      const cardClass = isNewBill ? 'bg-red-700 border-red-400' : 'bg-[#1A1A2E] border-[#0F3460]';
+      const titleText = isNewBill ? 'NEW BILL GENERATED!' : 'Latest Bill Summary';
+      const titleColor = isNewBill ? 'text-white' : 'text-pink-500';
+      const topButtonText = isNewBill ? 'View New Bill Details & Clear Notification' : 'Show Full History Log';
+      const topButtonAction = isNewBill ? 'viewAndClearFlag()' : 'showFullHistory()';
+      const topButtonClass = isNewBill ? 'bg-white text-red-700 hover:bg-gray-200' : 'bg-white text-[#0F3460] hover:bg-gray-200';
+      let payNowButtonHTML = '';
+      let statusBadgeHTML = '';
 
-            const rzp1 = new Razorpay(options);
-            rzp1.on('payment.failed', function (response){
-                alert('Payment Failed: ' + response.error.description);
-                // Optionally log the failure to your server
-            });
-            rzp1.open(); // Open the Razorpay checkout modal
-        }
+      if (latestBill.isPaid) {
+        statusBadgeHTML = '<span class="bg-green-500 text-white text-xs font-extrabold px-3 py-1 rounded-full"><i class="fas fa-check-circle mr-1"></i> PAID</span>';
+        payNowButtonHTML = '<button disabled class="w-full mt-2 bg-gray-500 text-white px-4 py-2 rounded-md font-bold cursor-not-allowed opacity-75 shadow-md"><i class="fas fa-wallet mr-2"></i> Bill Paid</button>';
+      } else {
+        statusBadgeHTML = isNewBill ? '<span class="bg-yellow-300 text-red-700 text-xs font-extrabold px-3 py-1 rounded-full">NEW</span>' : '';
+        payNowButtonHTML = `<button onclick="payNow(${latestBill.share}, '${latestBill.displayDate}', ${latestBill.presentDays})" class="w-full mt-2 bg-pink-500 text-[#16213E] px-4 py-2 rounded-md font-bold hover:bg-pink-600 transition shadow-md"><i class="fas fa-wallet mr-2"></i> Pay Now</button>`;
+      }
 
+      return `
+        <div class="p-6 ${cardClass} rounded-lg shadow-xl border-4 transition-all duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold ${titleColor}"><i class="fas fa-receipt mr-2"></i>${titleText}</h3>
+            ${statusBadgeHTML}
+          </div>
+          <div class="grid grid-cols-2 gap-4 border-t ${isNewBill ? 'border-red-500' : 'border-[#0F3460]'} pt-4">
+            <div><p class="text-sm text-gray-400">Billing Cycle</p><p class="text-lg font-semibold">${latestBill.displayDate}</p></div>
+            <div><p class="text-sm text-gray-400">Your Share</p><p class="text-2xl font-bold text-green-400">${latestBill.formattedShare}</p></div>
+            <div class="col-span-2"><p class="text-sm text-gray-400">Present Days</p><p class="text-lg font-semibold">${latestBill.presentDays}</p></div>
+          </div>
+          <button onclick="${topButtonAction}" class="w-full mt-6 ${topButtonClass} px-4 py-2 rounded-md font-bold transition shadow-md">${topButtonText}</button>
+          ${payNowButtonHTML}
+        </div>`;
+    }
 
-        // 2. Submits the successful payment details to your server
-        async function recordSuccessfulPayment(response, amount, billingCycle, presentDays) {
-            statusArea.innerHTML = '<p class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i> Recording successful payment...</p>';
+    async function viewAndClearFlag() {
+      statusArea.innerHTML = '<p class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i> Finalizing bill...</p>';
+      try {
+        const response = await fetch('/user/fetch-latest-bill-data');
+        if (response.ok) window.location.reload();
+        else alert('Failed to finalize bill view.');
+      } catch {
+        alert('Network error. Please try again.');
+      }
+    }
 
-            try {
-                // Send Razorpay success data and bill details to your server endpoint
-                const serverResponse = await fetch(PAYMENT_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        amount, 
-                        billingCycle, 
-                        presentDays,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature
-                    }),
-                });
+    function showFullHistory() {
+      historyTableContainer.classList.remove('hidden');
+      historyTableContainer.scrollIntoView({ behavior: 'smooth' });
+    }
 
-                const result = await serverResponse.json();
+    async function payNow(amount, billingCycle, presentDays) {
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: Math.round(amount * 100),
+        currency: "INR",
+        name: "Hostel Mess Bill Payment",
+        description: `Payment for ${billingCycle}`,
+        image: "https://i.imgur.com/k28bEaE.png",
+        handler: (response) => recordSuccessfulPayment(response, amount, billingCycle, presentDays),
+        theme: { color: "#E94560" }
+      };
+      const rzp1 = new Razorpay(options);
+      rzp1.open();
+    }
 
-                if (serverResponse.ok) {
-                    alert(result.message);
-                    window.location.reload(); // Reload to show 'PAID' status
-                } else {
-                    // Handle server-side errors (e.g., duplicate payment, validation failure)
-                    alert(`Payment recorded but with server issue: ${result.message || 'Unknown error'}. Please check with admin.`);
-                }
-                
-            } catch (error) {
-                console.error('Server submission error:', error);
-                alert('A network error occurred after successful payment. Please check your payment status with the admin.');
-            }
-        }
-
-        // --- END: RAZORPAY INTEGRATION FUNCTIONS ---
-
-
-        // Initial load function to check status and render the card
-        async function checkAndRenderBillCard() {
-            // Check if there is existing bill data to show in the history table (passed via HBS)
-            const hasHistory = {{#if bills}} true {{else}} false {{/if}};
-            
-            if (!hasHistory) {
-                // If no history exists, show a message and stop.
-                statusArea.innerHTML = `
-                    <div class="bg-[#0F3460] p-4 rounded-md text-center">
-                        <p class="text-lg text-gray-300">No mess bill history found yet.</p>
-                        <p class="text-sm text-gray-400 mt-2">The administrator generates the bill at the end of the month.</p>
-                    </div>`;
-                return;
-            }
-
-            try {
-                // Get status and latest bill data (read-only)
-                const response = await fetch('/user/latest-bill-card-data');
-                const result = await response.json();
-                
-                if (response.ok && result.success && result.latestBill) {
-                    statusArea.innerHTML = renderLatestBillCard(result.latestBill, result.isNewBill);
-                    
-                } else {
-                    // Fallback: If AJAX fails, show an error and stop.
-                    statusArea.innerHTML = '<p class="text-red-500 mt-2">Failed to load bill summary card. Please try refreshing.</p>';
-                }
-            } catch (error) {
-                console.error('Initial card load error:', error);
-                statusArea.innerHTML = '<p class="text-red-500 mt-2">Failed to fetch bill status. Please check your connection or refresh.</p>';
-            }
-        }
-        
-        // --- Event Listeners ---
-        document.getElementById('menu-btn').addEventListener('click', function() {
-            const sidebar = document.querySelector('aside');
-            sidebar.classList.toggle('hidden');
+    async function recordSuccessfulPayment(response, amount, billingCycle, presentDays) {
+      statusArea.innerHTML = '<p class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i> Recording payment...</p>';
+      try {
+        const res = await fetch(PAYMENT_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount, billingCycle, presentDays,
+            razorpay_payment_id: response.razorpay_payment_id
+          })
         });
-        
-        window.addEventListener('resize', () => {
-            const sidebar = document.querySelector('aside');
-            if (window.innerWidth >= 768) {
-                sidebar.classList.remove('hidden');
-            }
-        });
+        const result = await res.json();
+        alert(result.message || 'Payment successful');
+        window.location.reload();
+      } catch {
+        alert('Error recording payment. Please check with admin.');
+      }
+    }
 
-        // Assign functions globally for HTML calls
-        window.viewAndClearFlag = viewAndClearFlag;
-        window.showFullHistory = showFullHistory;
-        window.payNow = payNow; // Global assignment for the new button
+    async function checkAndRenderBillCard() {
+      const hasHistory = {{#if bills}} true {{else}} false {{/if}};
+      if (!hasHistory) {
+        statusArea.innerHTML = `<div class="bg-[#0F3460] p-4 rounded-md text-center"><p class="text-lg text-gray-300">No mess bill history yet.</p><p class="text-sm text-gray-400 mt-2">Generated at month-end.</p></div>`;
+        return;
+      }
+      try {
+        const res = await fetch('/user/latest-bill-card-data');
+        const data = await res.json();
+        if (res.ok && data.success) statusArea.innerHTML = renderLatestBillCard(data.latestBill, data.isNewBill);
+        else statusArea.innerHTML = '<p class="text-red-500 mt-2">Failed to load bill summary.</p>';
+      } catch {
+        statusArea.innerHTML = '<p class="text-red-500 mt-2">Error fetching bill data.</p>';
+      }
+    }
 
-        // Run the status check when the page loads
-        checkAndRenderBillCard();
-    </script>
+    document.getElementById('menu-btn').addEventListener('click', () => {
+      document.querySelector('aside').classList.toggle('hidden');
+    });
+
+    window.viewAndClearFlag = viewAndClearFlag;
+    window.showFullHistory = showFullHistory;
+    window.payNow = payNow;
+
+    checkAndRenderBillCard();
+  </script>
 </body>
 </html>

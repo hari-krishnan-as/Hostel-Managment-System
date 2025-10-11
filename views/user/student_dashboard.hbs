@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  />
 </head>
 <body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
   
   <!-- Sidebar -->
-  <aside class="hidden md:flex w-full md:w-64 bg-[#1A1A2E] flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
     <nav class="flex-1 px-4 md:px-8">
       <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
         Dashboard
       </h2>
+
       <ul class="md:space-y-4">
         <li>
           <a href="/user/dashboard" class="flex items-center space-x-3 p-2 pl-3 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
@@ -48,6 +52,7 @@
         </li>
       </ul>
     </nav>
+
     <div class="px-4 md:px-8 mt-2 md:mt-auto">
       <a href="/logout" class="flex items-center space-x-3 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
         <i class="fas fa-sign-out-alt"></i><span class="font-semibold">Log Out</span>
@@ -121,6 +126,7 @@
     </main>
   </div>
 
+  <!-- JavaScript -->
   <script>
     // Toggle mobile menu
     const menuBtn = document.getElementById('menu-btn');
@@ -130,5 +136,6 @@
       mobileMenu.classList.toggle('hidden');
     });
   </script>
+
 </body>
 </html>

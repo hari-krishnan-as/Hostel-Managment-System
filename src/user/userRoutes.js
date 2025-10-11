@@ -5,66 +5,66 @@ const bcrypt = require("bcrypt");
 const Notification = require("../../models/notification");
 const Payment = require("../../models/payment");
 
+
 // ---------------- Utility: Attendance (FIXED: Moved to top) ----------------
 function calculateMonthlyAttendance(registrationDate, leaves = []) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const regDate = new Date(registrationDate);
-  regDate.setHours(0, 0, 0, 0);
+  const regDate = new Date(registrationDate);
+  regDate.setHours(0, 0, 0, 0);
 
-  // If registration date invalid or in future
-  if (isNaN(regDate) || regDate > today) {
-    return {
-      presentDays: 0,
-      messCutDays: 0,
-      waitingApprovalDays: 0,
-      totalDays: 0
-    };
-  }
+  // If registration date invalid or in future
+  if (isNaN(regDate) || regDate > today) {
+    return {
+      presentDays: 0,
+      messCutDays: 0,
+      waitingApprovalDays: 0,
+      totalDays: 0
+    };
+  }
 
-  // 🔹 Get 1st day of current month
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  // 🔹 Get 1st day of current month
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  // 🔹 Start counting from whichever is later: registration date or first day of this month
-  const effectiveStart = regDate > firstDayOfMonth ? regDate : firstDayOfMonth;
+  // 🔹 Start counting from whichever is later: registration date or first day of this month
+  const effectiveStart = regDate > firstDayOfMonth ? regDate : firstDayOfMonth;
 
-  // 🔹 Total days from effective start to today (inclusive)
-  const totalDays = Math.floor((today - effectiveStart) / (1000 * 60 * 60 * 24)) + 1;
+  // 🔹 Total days from effective start to today (inclusive)
+  const totalDays = Math.floor((today - effectiveStart) / (1000 * 60 * 60 * 24)) + 1;
 
-  // 🏷️ Calculate leaves
-  let messCutDays = 0;
-  let waitingApprovalDays = 0;
+  // 🏷️ Calculate leaves
+  let messCutDays = 0;
+  let waitingApprovalDays = 0;
 
-  for (const leave of leaves) {
-    const leaveFrom = new Date(leave.from);
-    const leaveTo = new Date(leave.to);
-    leaveFrom.setHours(0, 0, 0, 0);
-    leaveTo.setHours(0, 0, 0, 0);
+  for (const leave of leaves) {
+    const leaveFrom = new Date(leave.from);
+    const leaveTo = new Date(leave.to);
+    leaveFrom.setHours(0, 0, 0, 0);
+    leaveTo.setHours(0, 0, 0, 0);
 
-    // Clip leave range to [effectiveStart, today]
-    const from = leaveFrom < effectiveStart ? effectiveStart : leaveFrom;
-    const to = leaveTo > today ? today : leaveTo;
+    // Clip leave range to [effectiveStart, today]
+    const from = leaveFrom < effectiveStart ? effectiveStart : leaveFrom;
+    const to = leaveTo > today ? today : leaveTo;
 
-    if (from <= to) {
-      const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
-      if (leave.approved) messCutDays += diff;
-      else waitingApprovalDays += diff;
-    }
-  }
+    if (from <= to) {
+      const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24)) + 1;
+      if (leave.approved) messCutDays += diff;
+      else waitingApprovalDays += diff;
+    }
+  }
 
-  const presentDays = totalDays - (messCutDays + waitingApprovalDays);
+  const presentDays = totalDays - (messCutDays + waitingApprovalDays);
 
-  return {
-    presentDays,
-    messCutDays,
-    waitingApprovalDays,
-    totalDays,
-    cycleStart: effectiveStart.toDateString(),
-    cycleEnd: today.toDateString()
-  };
+  return {
+    presentDays,
+    messCutDays,
+    waitingApprovalDays,
+    totalDays,
+    cycleStart: effectiveStart.toDateString(),
+    cycleEnd: today.toDateString()
+  };
 }
-
 
 
 // ---------------- Middleware ----------------
@@ -76,7 +76,9 @@ const isAuthenticated = (req, res, next) => {
 // Middleware to get unseen count (used in all routes except notifications page)
 async function notificationMiddleware(req, res, next) {
   try {
-    const unseenCount = await Notification.countDocuments({ seen: false });
+    // Assuming Notification model has a property to link to the user/hostel.
+    // If not, this counts ALL unseen notifications, which is usually correct for the header badge.
+    const unseenCount = await Notification.countDocuments({ seen: false }); 
     res.locals.notificationCount = unseenCount; // 👈 available in all hbs
     next();
   } catch (err) {
@@ -104,16 +106,16 @@ function formatBillHistory(billingHistory, name) {
 }
 
 
-// ---------------- EXISTING ROUTES (ADJUSTED) ----------------
+// ---------------- EXISTING ROUTES ----------------
 
-// Dashboard (UNCHANGED)
+// Dashboard
 router.get("/dashboard", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (foundUser) res.render("user/student_dashboard", { user: foundUser });
   else res.redirect("/login");
 });
 
-// Profile (UNCHANGED)
+// Profile
 router.get("/profile", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
@@ -130,11 +132,10 @@ router.get("/profile", isAuthenticated, async (req, res) => {
         registrationDate: displayDate 
     };
 
-
   res.render("user/profile", { user: userForProfile });
 });
 
-// Attendance (FIXED: Now can call the function)
+// Attendance
 router.get("/attendance", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
@@ -152,22 +153,19 @@ router.get("/attendance", isAuthenticated, async (req, res) => {
   });
 });
 
-// Apply Mess Cut (FIXED: Now can call the function)
+// Apply Mess Cut
 router.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
   const { startDate, endDate } = req.body;
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   
   if (!foundUser) return res.redirect("/login");
 
-
-// --- START: Date Validation and Adjustment ---
+  // --- START: Date Validation and Adjustment ---
   const now = new Date();
   const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   
-
   const tomorrow = new Date(today);
   tomorrow.setUTCDate(today.getUTCDate() + 1);
-
 
   const requestedStart = new Date(startDate);
   const requestedEnd = new Date(endDate);
@@ -178,16 +176,14 @@ router.post("/apply-mess-cut", isAuthenticated, async (req, res) => {
         return res.send("<script>alert('End date cannot be before the start date.'); window.location.href='/user/mess-cut';</script>");
   }
 
-
   let adjustedStart = requestedStartUTC;
   let message = "Leave application submitted successfully, pending admin approval.";
-
 
   if (requestedStartUTC < tomorrow) {
         
     adjustedStart = tomorrow;
     
-if (requestedEnd < adjustedStart) {
+    if (requestedEnd < adjustedStart) {
         return res.send("<script>alert('The minimum notice period is 1 day. Please adjust your dates.'); window.location.href='/user/mess-cut';</script>");
     }
 
@@ -211,7 +207,7 @@ if (requestedEnd < adjustedStart) {
   res.send(`<script>alert('${message}'); window.location.href='/user/mess-cut';</script>`);
 });
 
-// Mess Cut History (UNCHANGED)
+// Mess Cut History
 router.get("/mess-cut", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
@@ -223,6 +219,7 @@ router.get("/mess-cut", isAuthenticated, async (req, res) => {
 // ---------------- NEW API ENDPOINTS ----------------
 
 // 1. API Endpoint to check if the bill flag is set (for dashboard AJAX check)
+// NOTE: This route was duplicated later in the file and has been consolidated here.
 router.get("/bill-status", isAuthenticated, async (req, res) => {
     try {
         const user = await User.findOne({ hostelid: req.session.userId })
@@ -265,9 +262,170 @@ router.get("/fetch-latest-bill-data", isAuthenticated, async (req, res) => {
 });
 
 
+// 3. API Endpoint to fetch the latest bill data for the dashboard card
+router.get("/latest-bill-card-data", isAuthenticated, async (req, res) => {
+    try {
+        const foundUser = await User.findOne({ hostelid: req.session.userId })
+            .lean()
+            // Consolidated .select() calls and removed redundant _id if not needed
+            .select('billingHistory name needsBillRefresh _id') 
+            .readConcern('majority'); 
+
+        if (!foundUser) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+        
+        const isNewBill = foundUser.needsBillRefresh;
+        
+        // Sort history and get the latest one
+        // Consolidated multiple variable assignments
+        const sortedHistory = (foundUser.billingHistory || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+        const latestBillRaw = sortedHistory.length > 0 ? sortedHistory[0] : null;
+
+        let billData = null;
+
+        if (latestBillRaw) {
+            const displayDate = new Date(latestBillRaw.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+            
+            // Check payment status for the latest bill cycle
+            const isPaid = await Payment.exists({ 
+                userId: foundUser._id, 
+                billingCycle: displayDate, 
+                status: 'Completed' 
+            });
+
+            billData = {
+                displayDate: displayDate,
+                formattedShare: `₹${latestBillRaw.studentShare.toFixed(2)}`,
+                presentDays: latestBillRaw.presentDays,
+                share: latestBillRaw.studentShare, // Pass raw amount for payNow()
+                isPaid: !!isPaid, // Convert null/object to boolean
+            };
+        }
+
+        res.json({ success: true, isNewBill, latestBill: billData });
+
+    } catch (err) {
+        console.error("Error fetching card data:", err);
+        res.status(500).json({ success: false, message: "Server error fetching bill card data." });
+    }
+});
 
 
-// complaints (UNCHANGED)
+// ---------------- PAYMENT ROUTE ----------------
+
+// NEW POST route to handle payment submission from client after successful Razorpay checkout
+router.post("/pay-bill", isAuthenticated, async (req, res) => {
+    // Added Razorpay fields to the destructuring
+    const { amount, billingCycle, presentDays, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    
+    const foundUser = await User.findOne({ hostelid: req.session.userId });
+    if (!foundUser) return res.status(404).json({ success: false, message: "User not found." });
+
+    // Simple validation
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ success: false, message: "Invalid payment amount." });
+    }
+    if (!razorpay_payment_id) {
+        return res.status(400).json({ success: false, message: "Missing Razorpay Payment ID." });
+    }
+
+    // --- Security Note: Signature Verification is skipped here but required in production ---
+
+    try {
+        // 1. Check if the bill has already been paid for this cycle (to prevent duplicates)
+        const existingPayment = await Payment.findOne({ 
+            userId: foundUser._id, 
+            billingCycle: billingCycle,
+            status: 'Completed'
+        });
+        
+        if (existingPayment) {
+            return res.status(409).json({ success: false, message: `Bill for ${billingCycle} is already paid.` });
+        }
+
+        // 2. Create the new payment record
+        await Payment.create({
+            userId: foundUser._id,
+            hostelid: foundUser.hostelid,
+            billingCycle: billingCycle,
+            amount: parsedAmount,
+            presentDays: parseInt(presentDays) || 0,
+            status: 'Completed',
+            razorpayPaymentId: razorpay_payment_id, 
+            razorpayOrderId: razorpay_order_id 
+        });
+
+        // 3. Clear the new bill flag (if set)
+        await User.updateOne(
+            { _id: foundUser._id },
+            { $set: { needsBillRefresh: false } }
+        );
+
+
+        res.json({ success: true, message: `Payment of ₹${parsedAmount.toFixed(2)} for ${billingCycle} confirmed by Razorpay and recorded successfully.` });
+    
+    } catch (err) {
+        console.error("Payment submission error:", err);
+        // Catch the unique index error for double payment attempts
+        if (err.code === 11000) { 
+             return res.status(409).json({ success: false, message: `Bill for ${billingCycle} is already paid (duplicate entry).` });
+        }
+        res.status(500).json({ success: false, message: "Server error during payment processing." });
+    }
+});
+
+
+// ---------------- MESS BILL ROUTES (FIXED) ----------------
+
+// Mess Bill History (Modified: removed variable redeclaration)
+router.get("/mess-bill", isAuthenticated, async (req, res) => {
+  try {
+    const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
+
+    if (!foundUser) return res.redirect("/login");
+
+    // Fetch all successful payments for this user (if this logic is necessary for the mess-bill page)
+    // NOTE: The formatBillHistory function provided does NOT take userPayments, so this line is redundant
+    // const userPayments = await Payment.find({ userId: foundUser._id, status: 'Completed' }).lean(); 
+
+    // Use the new function to format the bill data
+    const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
+
+    res.render("user/mess-bill", { name, bills: bills });
+
+  } catch (err) {
+    console.error("Error fetching mess bill:", err);
+    res.status(500).send("Server Error");
+  }
+});
+
+// Full History (FIXED: combined and removed variable redeclaration)
+// NOTE: I'm assuming the second block that was duplicating the route was the correct one to keep
+// as it uses the simpler formatBillHistory function (which is what is defined).
+router.get("/mess-bill1", isAuthenticated, async (req, res) => {
+    try {
+        const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
+    
+        if (!foundUser) return res.redirect("/login");
+    
+        // Use the new function to format the bill data
+        const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
+    
+        // Render the new template
+        res.render("user/mess-bill1", { name, bills: bills });
+    
+    } catch (err) {
+        console.error("Error fetching full mess bill history:", err);
+        res.status(500).send("Server Error");
+    }
+});
+
+
+// ---------------- COMPLAINTS & SUGGESTIONS ----------------
+
+// complaints 
 router.get("/complaints", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   if (!foundUser) return res.redirect("/login");
@@ -313,7 +471,7 @@ router.post("/delete-complaint/:hostelid/:complaintId", isAuthenticated, async (
   }
 });
 
-// Suggestions (UNCHANGED)
+// Suggestions
 router.get("/suggestions", isAuthenticated, async (req, res) => {
   const foundUser = await User.findOne({ hostelid: req.session.userId });
   res.render("user/suggestions", {
@@ -345,7 +503,7 @@ router.post("/delete-suggestion/:id", isAuthenticated, async (req, res) => {
 });
 
 
-// Settings (UNCHANGED)
+// Settings
 router.get("/settings", isAuthenticated, (req, res) => res.render("user/settings"));
 
 router.post("/change-password", isAuthenticated, async (req, res) => {
@@ -368,186 +526,19 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
   res.send("<script>alert('Password changed successfully'); window.location.href='/user/settings';</script>");
 });
 
+// Show all notifications for users
+router.get("/notifications", async (req, res) => {
+  try {
+    const notifications = await Notification.find().sort({ _id: -1 });
 
-// Mess Bill History (Modified to use the new formatter)
-router.get("/mess-bill", isAuthenticated, async (req, res) => {
-  try {
-    const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
+    // Mark all as seen when user opens the page
+    await Notification.updateMany({ seen: false }, { $set: { seen: true } });
 
-    if (!foundUser) return res.redirect("/login");
-
-    // Fetch all successful payments for this user
-    const userPayments = await Payment.find({ userId: foundUser._id, status: 'Completed' }).lean();
-
-    // Use the new function to format the bill data
-    const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name, userPayments);
-
-    res.render("user/mess-bill", { name, bills: bills });
-
-  } catch (err) {
-    console.error("Error fetching mess bill:", err);
-    res.status(500).send("Server Error");
-  }
+    res.render("user/notifications", { notifications });
+  } catch (err) {
+    res.status(500).send("Error loading notifications");
+  }
 });
 
-//full history (Modified to fetch payments)
-router.get("/mess-bill1", isAuthenticated, async (req, res) => {
-    try {
-        const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
-    
-        if (!foundUser) return res.redirect("/login");
-    
-        // Fetch all successful payments for this user
-        const userPayments = await Payment.find({ userId: foundUser._id, status: 'Completed' }).lean();
-
-        // Use the new function to format the bill data
-        const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name, userPayments);
-    
-        // Render the new template
-        res.render("user/mess-bill1", { name, bills: bills });
-    
-    } catch (err) {
-        console.error("Error fetching full mess bill history:", err);
-        res.status(500).send("Server Error");
-    }
-});
-
-router.get("/latest-bill-card-data", isAuthenticated, async (req, res) => {
-    try {
-        const foundUser = await User.findOne({ hostelid: req.session.userId })
-            .lean()
-            .select('billingHistory name needsBillRefresh _id') 
-            .readConcern('majority'); 
-
-        if (!foundUser) {
-            return res.status(404).json({ success: false, message: "User not found." });
-        }
-        
-        const isNewBill = foundUser.needsBillRefresh;
-        
-        // Sort history and get the latest one
-        const latestBillRaw = foundUser.billingHistory.length > 0
-            ? foundUser.billingHistory.sort((a, b) => new Date(b.date) - new Date(a.date))[0]
-            : null;
-
-        let billData = null;
-        if (latestBillRaw) {
-            const displayDate = new Date(latestBillRaw.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-            
-            // Check payment status for the latest bill cycle
-            const isPaid = await Payment.exists({ 
-                userId: foundUser._id, 
-                billingCycle: displayDate, 
-                status: 'Completed' 
-            });
-
-            billData = {
-                displayDate: displayDate,
-                formattedShare: `₹${latestBillRaw.studentShare.toFixed(2)}`,
-                presentDays: latestBillRaw.presentDays,
-                share: latestBillRaw.studentShare, // Pass raw amount for payNow()
-                isPaid: !!isPaid, // Convert null/object to boolean
-            };
-        }
-
-        res.json({ success: true, isNewBill, latestBill: billData });
-
-    } catch (err) {
-        console.error("Error fetching card data:", err);
-        res.status(500).json({ success: false, message: "Server error fetching bill card data." });
-    }
-});
-
-// NEW POST route to handle payment submission from client after successful Razorpay checkout
-router.post("/pay-bill", isAuthenticated, async (req, res) => {
-    // Added Razorpay fields to the destructuring
-    const { amount, billingCycle, presentDays, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-    
-    const foundUser = await User.findOne({ hostelid: req.session.userId });
-    if (!foundUser) return res.status(404).json({ success: false, message: "User not found." });
-
-    // Simple validation
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ success: false, message: "Invalid payment amount." });
-    }
-    if (!razorpay_payment_id) {
-        return res.status(400).json({ success: false, message: "Missing Razorpay Payment ID." });
-    }
-
-    // --- Security Note: Signature Verification is skipped here but required in production ---
-
-    try {
-        // 1. Check if the bill has already been paid for this cycle (to prevent duplicates)
-        const existingPayment = await Payment.findOne({ 
-            userId: foundUser._id, 
-            billingCycle: billingCycle,
-            status: 'Completed'
-        });
-        
-        if (existingPayment) {
-            return res.status(409).json({ success: false, message: `Bill for ${billingCycle} is already paid.` });
-        }
-
-        // 2. Create the new payment record
-        await Payment.create({
-            userId: foundUser._id,
-            hostelid: foundUser.hostelid,
-            billingCycle: billingCycle,
-            amount: parsedAmount,
-            presentDays: parseInt(presentDays) || 0,
-            status: 'Completed',
-            razorpayPaymentId: razorpay_payment_id, 
-            razorpayOrderId: razorpay_order_id 
-        });
-
-        // 3. Clear the new bill flag (if set)
-        await User.updateOne(
-            { _id: foundUser._id },
-            { $set: { needsBillRefresh: false } }
-        );
-
-
-        res.json({ success: true, message: `Payment of ₹${parsedAmount.toFixed(2)} for ${billingCycle} confirmed by Razorpay and recorded successfully.` });
-    
-    } catch (err) {
-        console.error("Payment submission error:", err);
-        // Catch the unique index error for double payment attempts
-        if (err.code === 11000) { 
-             return res.status(409).json({ success: false, message: `Bill for ${billingCycle} is already paid (duplicate entry).` });
-        }
-        res.status(500).json({ success: false, message: "Server error during payment processing." });
-    }
-});
-
-router.get("/bill-status", isAuthenticated, async (req, res) => {
-    try {
-        const user = await User.findOne({ hostelid: req.session.userId })
-            .lean()
-            .select('needsBillRefresh')
-            .readConcern('majority');
-
-        res.json({ billGenerated: user && user.needsBillRefresh });
-    } catch (err) {
-        // Must send a valid JSON response even on error so the frontend doesn't crash
-        res.status(500).json({ billGenerated: false, error: err.message });
-    }
-});
-
-router.get("/bill-status", isAuthenticated, async (req, res) => {
-    try {
-        const user = await User.findOne({ hostelid: req.session.userId })
-            .lean()
-            .select('needsBillRefresh')
-            .readConcern('majority');
-
-        res.json({ billGenerated: user && user.needsBillRefresh });
-    } catch (err) {
-        // Must send a valid JSON response even on error so the frontend doesn't crash
-        res.status(500).json({ billGenerated: false, error: err.message });
-    }
-});
-
-
-
+// ---------------- MODULE EXPORT ----------------
 module.exports = { router, notificationMiddleware };
