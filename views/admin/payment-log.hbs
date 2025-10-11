@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mess Bill Payment Log</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
+    
+    <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+        <nav class="flex-1 px-4 md:px-8">
+            <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
+                Admin Dashboard
+            </h2>
+            <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
+                <li>
+                    <a href="/admin/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/pending-users" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Registered Students</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/expense-log" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-chart-line text-[#E94560]"></i><span class="hidden sm:inline">Expense Log</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/payment-log" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+                        <i class="fas fa-file-invoice-dollar text-[#E94560]"></i><span class="hidden sm:inline">Payment Log</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/approve-messcut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Approve Mess Cut Leave</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/view-complaint" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">View Complaints</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/view-suggestion" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">View Suggestions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/give-notification" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-bell text-[#E94560]"></i><span class="hidden sm:inline">Give Notification</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/upload-sheet" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+                        <i class="fas fa-upload text-[#E94560]"></i><span class="hidden sm:inline">Upload Students List</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="px-4 md:px-8 mt-2 md:mt-auto">
+            <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
+                <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex flex-col flex-1">
+        
+        <header class="w-full flex items-center justify-end py-3 md:py-4 px-4 md:px-6 bg-[#0F3460] text-white">
+            <div class="flex items-center space-x-4 md:space-x-6">
+                <a href="#" class="hover:text-gray-400 transition">
+                    <i class="fas fa-cog text-lg"></i>
+                </a>
+                <a href="#" class="hover:text-gray-400 transition">
+                    <i class="fas fa-user-circle text-lg"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="flex-1 p-6">
+            <h1 class="text-2xl font-bold mb-4 text-green-400 flex items-center space-x-2">
+                <i class="fas fa-file-invoice-dollar"></i><span>Mess Bill Payment Log</span>
+            </h1>
+
+            <div class="mb-4 flex items-center space-x-4">
+    <label for="programFilter" class="font-semibold text-gray-300">Filter by Program:</label>
+    <select id="programFilter" onchange="filterTable()" class="bg-[#1A1A2E] border border-[#0F3460] text-white rounded-lg p-2 focus:ring-pink-500 focus:border-pink-500">
+        <option value="All">All Programs</option>
+
+        {{#if uniquePrograms.length}}
+            {{#each uniquePrograms}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        {{/if}}
+        
+    </select>
+</div>
+            
+            {{#if payments.length}} 
+                <div class="overflow-x-auto">
+                    <table id="paymentTable" class="min-w-full bg-[#1A1A2E] rounded-lg shadow-md">
+                        <thead>
+                            <tr class="bg-[#0F3460] text-left">
+                                <th class="p-3 text-red-300">Student Name</th>
+                                <th class="p-3">Hostel ID</th>
+                                <th class="p-3 hidden sm:table-cell">Program</th>
+                                <th class="p-3">Billing Cycle</th>
+                                <th class="p-3 text-right">Amount Paid</th>
+                                <th class="p-3 text-right hidden md:table-cell">Payment Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each payments}} 
+                                <tr class="border-b border-[#0F3460] hover:bg-[#222A49]" data-program="{{this.program}}">
+                                    <td class="p-3 font-semibold">{{this.name}}</td>
+                                    <td class="p-3 text-gray-300">{{this.hostelid}}</td>
+                                    <td class="p-3 hidden sm:table-cell">{{this.program}}</td>
+                                    <td class="p-3">{{this.billingCycle}}</td>
+                                    <td class="p-3 text-right font-bold text-green-400">{{this.formattedAmount}}</td>
+                                    <td class="p-3 text-right hidden md:table-cell text-gray-400">{{this.formattedDate}}</td>
+                                </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+            {{else}}
+                <div class="bg-[#0F3460] p-4 rounded-md text-center mt-8">
+                    <p class="text-lg text-gray-300">No successful mess bill payments found yet.</p>
+                </div>
+            {{/if}}
+        </main>
+
+    </div>
+
+    <script>
+        function filterTable() {
+            const select = document.getElementById('programFilter');
+            const filterValue = select.value;
+            const tableBody = document.querySelector('#paymentTable tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Use .toLowerCase() for case-insensitive filtering
+                const program = row.getAttribute('data-program').toUpperCase(); 
+                
+                if (filterValue === 'All' || program === filterValue.toUpperCase()) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        // NOTE: The uniquePrograms array needs to be fetched or passed by the server for the filter dropdown to populate correctly.
+        // For simplicity and matching your existing Registered Students page, you will likely need to adjust the data passed by adminRoutes.js
+    </script>
+
+</body>
+</html>

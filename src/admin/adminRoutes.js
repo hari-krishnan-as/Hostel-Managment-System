@@ -29,7 +29,7 @@ router.get("/upload-sheet", isAuthenticated, async (req, res) => {
   }
 });
 
-// 4. POST: Handle file upload, parsing, and data storage (FIXED)
+// 4. POST: Handle file upload, parsing, and data storage
 router.post("/upload-sheet", isAuthenticated, upload.single("registrationFile"), async (req, res) => {
   const admin = await User.findOne({ hostelid: req.session.userId });
   if (!admin || admin.role !== "admin") return res.redirect("/login");
@@ -124,7 +124,6 @@ router.get("/dashboard", isAuthenticated, async (req, res) => {
 });
 
 
-
 // Registered Users List (UNCHANGED)
 router.get("/pending-users", isAuthenticated, async (req, res) => {
   const admin = await User.findOne({ hostelid: req.session.userId });
@@ -134,7 +133,7 @@ router.get("/pending-users", isAuthenticated, async (req, res) => {
   // 1. Fetch all registered students (excluding admin)
   const registeredUsers = await User.find({ role: { $ne: 'admin' } }).select('-password');
 
-    // 2. ✅ FIX: Get unique program names by converting them all to uppercase first.
+    // 2. Get unique program names
     const uniqueProgramsSet = new Set(
         registeredUsers.map(user => String(user.program).toUpperCase())
     );
@@ -227,21 +226,21 @@ router.get("/view-suggestion", isAuthenticated, async (req, res) => {
 
 // Give notification page
 router.get("/give-notification", isAuthenticated, async (req, res) => {
-  const notifications = await Notification.find().sort({ _id: -1 });
-  res.render("admin/give-notification", { notifications });
+  const notifications = await Notification.find().sort({ _id: -1 });
+  res.render("admin/give-notification", { notifications });
 });
 
 // POST notification
 router.post("/give-notification", isAuthenticated, async (req, res) => {
-  const { message } = req.body;
-  await Notification.create({ message });
-  res.redirect("/admin/give-notification");
+  const { message } = req.body;
+  await Notification.create({ message });
+  res.redirect("/admin/give-notification");
 });
 
 // Delete notification
 router.post("/delete-notification/:id", isAuthenticated, async (req, res) => {
-  await Notification.findByIdAndDelete(req.params.id);
-  res.redirect("/admin/give-notification");
+  await Notification.findByIdAndDelete(req.params.id);
+  res.redirect("/admin/give-notification");
 });
 
 // --- UTILITY: ATTENDANCE CALCULATION FOR BILLING (UNCHANGED) ---
@@ -477,37 +476,57 @@ router.get("/expense-log", isAuthenticated, async (req, res) => {
     }
 });
 
-// -------------------- Payment Log (NEW ROUTE) --------------------
+// -------------------- Payment Log (NEW ROUTE - CORRECTED) --------------------
 router.get("/payment-log", isAuthenticated, async (req, res) => {
-    // Check admin
-    const admin = await User.findOne({ hostelid: req.session.userId });
-    if (!admin || admin.role !== "admin") return res.redirect("/login");
+    // Check admin
+    const admin = await User.findOne({ hostelid: req.session.userId });
+    if (!admin || admin.role !== "admin") return res.redirect("/login");
 
-    try {
-        // Fetch all successful payments and populate user details for display
-        const payments = await Payment.find({ status: 'Completed' })
-            .populate('userId', 'name program') // Get name and program from User model
-            .sort({ paymentDate: -1 })
-            .lean();
+    try {
+        // 1. Fetch all completed payments and populate user details
+        const payments = await Payment.find({ status: 'Completed' })
+            .populate('userId', 'name program') // Get name and program from User model
+            .sort({ paymentDate: -1 })
+            .lean();
 
-        // Format data for HBS
-        const formattedPayments = payments.map(p => ({
-            ...p,
-            name: p.userId.name,
-            program: p.userId.program,
-            formattedDate: p.paymentDate.toLocaleDateString("en-US", {
-                year: "numeric", month: "short", day: "2-digit", timeZone: "UTC"
-            }),
-            formattedAmount: `₹${p.amount.toFixed(2)}`
-        }));
+        // 2. Fetch ALL unique programs from the User collection for the filter dropdown.
+        // This query works and returns the list of programs.
+        const allPrograms = await User.distinct('program', { role: { $ne: 'admin' } });
+        
+        // Normalize and clean the program list
+        const uniquePrograms = allPrograms
+            .filter(p => p && String(p).trim() !== '')
+            .map(p => String(p).toUpperCase());
 
-        res.render("admin/payment-log", { payments: formattedPayments });
 
-    } catch (err) {
-        console.error("Error fetching payment log:", err);
-        // Ensure to handle the case where userId population might fail or data is missing
-        res.render("admin/payment-log", { payments: [], error: "Database error loading payment history." });
-    }
+        // 3. Format payment data for HBS
+        const formattedPayments = payments.map(p => {
+            // Safely extract and normalize populated data
+            const programName = p.userId && p.userId.program ? String(p.userId.program).toUpperCase() : 'N/A';
+            
+            return {
+                ...p,
+                name: p.userId ? p.userId.name : 'Unknown User',
+                program: programName, // Normalized program for consistency and filtering
+                
+                formattedDate: p.paymentDate.toLocaleDateString("en-US", {
+                    year: "numeric", month: "short", day: "2-digit", timeZone: "UTC"
+                }),
+                formattedAmount: `₹${p.amount.toFixed(2)}`
+            };
+        });
+
+        // 4. Render the page with both lists
+        res.render("admin/payment-log", { 
+            payments: formattedPayments,
+            uniquePrograms: uniquePrograms // PASSING THE ARRAY HERE
+        });
+
+    } catch (err) {
+        console.error("Error fetching payment log:", err);
+        // Pass an empty array on error to prevent render crash
+        res.render("admin/payment-log", { payments: [], uniquePrograms: [], error: "Database error loading payment history." });
+    }
 });
 
 module.exports = router;
