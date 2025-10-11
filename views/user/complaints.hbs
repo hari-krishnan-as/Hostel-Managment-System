@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complaints</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
+  
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-4 md:px-8">
+      <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
+        Dashboard
+      </h2>
+      <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
+        <li>
+          <a href="/user/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/attendance" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Attendance</span>
+          </a>
+        </li>
+        <li>
+            <a href="/user/mess-bill" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+              <i class="fas fa-receipt text-[#E94560]"></i><span class="hidden sm:inline">Mess Bill</span>
+            </a>
+                </li>
+        <li>
+          <a href="/user/mess-cut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Mess Cut Leave</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/complaints" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+            <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">Complaints</span>
+          </a>
+        </li>
+        <li>
+          <a href="/user/suggestions" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Suggestions</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="px-4 md:px-8 mt-2 md:mt-auto">
+      <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
+        <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex flex-col flex-1">
+    
+    <!-- Header -->
+<header class="w-full flex items-center justify-between py-4 px-6 bg-[#0F3460] text-white">
+  <!-- Mobile Menu Button -->
+  <button id="menu-btn" class="md:hidden focus:outline-none">
+    <i class="fas fa-bars text-2xl"></i>
+  </button>
+
+  <!-- Right Icons -->
+  <div class="flex items-center space-x-6 ml-auto">
+    <!-- Notification Bell -->
+    <a href="/user/notifications" class="relative hover:text-gray-400 transition focus:outline-none">
+      <i class="fas fa-bell text-lg"></i>
+      {{#if notificationCount}}
+        <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          {{notificationCount}}
+        </span>
+      {{/if}}
+    </a>
+
+    <!-- Other icons -->
+    <a href="/user/settings" class="hover:text-gray-400 transition">
+      <i class="fas fa-cog text-lg"></i>
+    </a>
+    <a href="/user/profile" class="hover:text-gray-400 transition">
+      <i class="fas fa-user-circle text-lg"></i>
+    </a>
+  </div>
+</header>
+
+    <!-- Complaints Section -->
+    <main class="p-4 md:p-8 flex-1">
+      <h1 class="text-xl md:text-3xl font-bold text-pink-500 mb-6 text-center">Complaints</h1>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Submit Complaint -->
+        <div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
+          <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Submit Complaint</h2>
+          
+          <form 
+                action="/user/complaints" 
+                method="POST"
+                {{!-- ADDED onsubmit FOR PRE-SUBMISSION CONFIRMATION --}}
+                onsubmit="return confirm('Are you sure you want to submit this complaint? It will be sent to the administration for review.')"
+            >
+            <textarea 
+              name="complaint" 
+              placeholder="Enter your complaint..." 
+              required
+              class="w-full p-3 rounded-md bg-[#0F3460] text-white mb-4"></textarea>
+            <button type="submit" 
+              class="w-full bg-pink-500 text-white p-2 rounded-md hover:bg-pink-600 transition">
+              Submit
+            </button>
+          </form>
+        </div>
+
+       <!-- Complaint History -->
+<div class="bg-[#1B1F3B] p-6 rounded-xl shadow-md">
+  <h2 class="text-lg md:text-xl font-bold text-pink-500 mb-4">Complaint History</h2>
+  {{#if complaints.length}}
+    <ul class="space-y-3">
+      {{#each complaints}}
+        <li class="flex justify-between items-center bg-[#0F3460] p-3 rounded-md">
+          <p class="text-white">{{this.text}}</p>
+
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 rounded-md font-semibold
+              {{#if (eq this.status "Pending")}}bg-yellow-500 text-black
+              {{else if (eq this.status "Resolved")}}bg-green-600 text-white
+              {{else if (eq this.status "Rejected")}}bg-red-600 text-white
+              {{/if}}">
+              {{this.status}}
+            </span>
+
+            <!-- ✅ Delete Button -->
+            <form action="/user/delete-complaint/{{../user.hostelid}}/{{this._id}}" method="POST">
+              <button 
+                type="submit" 
+                class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition"
+                <!-- onclick="return confirm('Are you sure you want to delete this complaint?');"-->
+                >
+                Delete
+              </button>
+            </form>
+          </div>
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p class="text-gray-400">No complaints available.</p>
+  {{/if}}
+</div>
+
+
+      </div>
+    </main>
+  </div>
+  <script>
+    // --- STATUS COLOR LOGIC (UNCHANGED) ---
+  function updateSelectBg(select) {
+    select.classList.remove("bg-yellow-500", "bg-green-600", "bg-red-600");
+    
+    const status = select.value;
+
+    if (status === "Pending") {
+      select.classList.add("bg-yellow-500");
+    } else if (status === "Resolved") {
+      select.classList.add("bg-green-600");
+    } else if (status === "Rejected") {
+      select.classList.add("bg-red-600");
+    }
+    select.classList.add("text-white", "font-semibold");
+  }
+
+  // Apply styling on load + on change
+  document.querySelectorAll(".status-select").forEach(select => {
+    updateSelectBg(select);
+    select.addEventListener("change", (e) => updateSelectBg(e.target));
+  });
+    
+    // --- ✅ NEW SIMPLE FILTERING LOGIC ---
+    function filterComplaints() {
+        const programFilter = document.getElementById('programFilter').value;
+        const userCards = document.querySelectorAll('.complaint-user-card');
+
+        userCards.forEach(card => {
+            // Normalize card program for comparison (e.g., 'MCA')
+            const cardProgram = card.getAttribute('data-program').toUpperCase(); 
+            
+            // Normalize filter value for comparison (e.g., 'MCA' or 'ALL')
+            const filterValue = programFilter.toUpperCase();
+
+            // Check if the filter is 'ALL' or if the programs match
+            if (filterValue === 'ALL' || cardProgram === filterValue) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

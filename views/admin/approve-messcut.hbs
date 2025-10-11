@@ -1,0 +1,117 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approve Mess Cut Leave</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-[#1A1A2E] flex md:flex-col justify-between py-4 md:py-8 border-b md:border-r border-[#0F3460]">
+    <nav class="flex-1 px-4 md:px-8">
+      <h2 class="text-base md:text-lg font-bold text-red-500 mb-4 md:mb-6 uppercase tracking-wide bg-[#0F3460] p-2 md:p-3 rounded-md text-center">
+        Admin Dashboard
+      </h2>
+      <ul class="flex md:flex-col space-x-4 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-visible">
+        <li>
+          <a href="/admin/dashboard" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-home text-[#E94560]"></i><span class="hidden sm:inline">Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="pending-users" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition ">
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Registered Students </span>
+          </a>
+        </li>
+        <li>
+          <a href="expense-log" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-user-check text-[#E94560]"></i><span class="hidden sm:inline">Expense Log</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/approve-messcut" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md bg-[#0F3460] border-l-4 border-[#E94560]">
+            <i class="fas fa-utensils text-[#E94560]"></i><span class="hidden sm:inline">Approve Mess Cut Leave</span>
+          </a>
+        </li>
+        <li>
+          <a href="view-complaint" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-exclamation-circle text-[#E94560]"></i><span class="hidden sm:inline">View Complaints</span>
+          </a>
+        </li>
+        <li>
+          <a href="view-suggestion" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">View Suggestions</span>
+          </a>
+        </li>
+        <li>
+          <a href="give-notification" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Give Notification</span>
+          </a>
+        </li>
+        </li>
+        <li>
+          <a href="upload-sheet" class="flex items-center space-x-2 md:space-x-4 p-2 pl-3 md:pl-4 rounded-md hover:bg-[#0F3460] hover:border-l-4 hover:border-[#E94560] transition">
+            <i class="fas fa-lightbulb text-[#E94560]"></i><span class="hidden sm:inline">Upload Students List</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="px-4 md:px-8 mt-2 md:mt-auto">
+      <a href="/logout" class="flex items-center space-x-2 md:space-x-4 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
+        <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline font-semibold">Log Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex flex-col flex-1">
+    <header class="w-full flex items-center justify-end py-3 px-6 bg-[#0F3460] text-white">
+      <div class="flex items-center space-x-6">
+        <i class="fas fa-cog text-lg hover:text-gray-400"></i>
+        <i class="fas fa-user-circle text-lg hover:text-gray-400"></i>
+      </div>
+    </header>
+
+    <!-- Table -->
+    <main class="flex-1 p-6">
+      {{#if messCuts.length}}
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-[#1A1A2E] rounded-lg shadow-md">
+            <thead>
+              <tr class="bg-[#0F3460] text-left">
+                <th class="p-3">Name</th>
+                <th class="p-3">Hostel ID</th>
+                <th class="p-3">From</th>
+                <th class="p-3">To</th>
+                <th class="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each messCuts}}
+                <tr class="border-b border-[#0F3460] hover:bg-[#222A49]">
+                  <td class="p-3">{{this.name}}</td>
+                  <td class="p-3">{{this.hostelid}}</td>
+                  <td class="p-3">{{this.from}}</td>
+                  <td class="p-3">{{this.to}}</td>
+                  <td class="p-3">
+                    <form action="/admin/approve-messcut/{{this._id}}" method="POST">
+                      <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        Approve
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      {{else}}
+        <p class="text-center text-gray-400">No pending mess cut requests.</p>
+      {{/if}}
+    </main>
+  </div>
+</body>
+</html>
