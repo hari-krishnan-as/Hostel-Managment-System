@@ -27,7 +27,6 @@ let registrationData = [];
 app.locals.registrationData = registrationData; 
 
 
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -37,8 +36,12 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
+    saveUninitialized: false, // CRITICAL FIX: Only create session when user logs in
+    cookie: { 
+      secure: false, // Keep false for localhost (HTTP)
+      httpOnly: true, // Recommended for security
+      maxAge: 1000 * 60 * 60 * 24 * 7 // Set cookie lifespan: 7 days
+    },
   })
 );
 
@@ -132,7 +135,7 @@ app.post("/request", async (req, res) => {
     data = { 
       name: excelUser.Name,
       department: excelUser.Department,
-      program: excelUser.Program, 
+      program: excelUser.Program,  
       semester: semesterValue, // Hardcoded to 1
       
       hostelid: generatedHostelid, 
@@ -196,7 +199,22 @@ app.post("/login", async (req, res) => {
 
 // Logout
 app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/"));
+    // Explicitly set session data to null before destroying
+    req.session.userId = null;
+    req.session.role = null; 
+    
+    // Destroy the current session
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Logout error:", err);
+            return res.status(500).send("Error logging out.");
+        }
+        // CRITICAL: Clear the cookie to prevent ghost sessions in the browser
+        res.clearCookie('connect.sid');
+        
+        // Redirect to the homepage/login after successful destruction
+        res.redirect("/"); 
+    });
 });
 
 // Mount routes

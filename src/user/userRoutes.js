@@ -6,7 +6,7 @@ const Notification = require("../../models/notification");
 const Payment = require("../../models/payment");
 
 
-// ---------------- Utility: Attendance (FIXED: Moved to top) ----------------
+// ---------------- Utility: Attendance ----------------
 function calculateMonthlyAttendance(registrationDate, leaves = []) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -67,13 +67,70 @@ function calculateMonthlyAttendance(registrationDate, leaves = []) {
 }
 
 
+// ---------------- UTILITY: Bill History Formatting (ROBUST VERSION) ----------------
+function formatBillHistory(billingHistory, name) {
+    // 1. Ensure we have an array to work with
+    const history = (billingHistory || []);
+
+    // 2. Filter out any invalid/corrupted entries BEFORE sorting/mapping
+    const validHistory = history.filter(bill => 
+        // CRITICAL CHECK: Ensure date exists AND studentShare is a valid number
+        bill && bill.date && typeof bill.studentShare === 'number' && bill.studentShare >= 0
+    );
+    
+    // 3. Sort and map the valid entries
+    const bills = validHistory
+        // FIX: Add a defensive check inside sort to handle invalid date values gracefully
+        .sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            
+            // If either date is invalid (NaN), treat it as 0 for sorting
+            const timeA = isNaN(dateA) ? 0 : dateA;
+            const timeB = isNaN(dateB) ? 0 : dateB;
+            
+            return timeB - timeA; // latest first (descending)
+        }) 
+        .map(bill => {
+            // This relies on the filter above ensuring core properties exist
+            return {
+                displayDate: new Date(bill.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+                formattedShare: `₹${bill.studentShare.toFixed(2)}`,
+                formattedRate: `₹${(bill.ratePerDay || 0).toFixed(2)}`, 
+                formattedTotalExpense: `₹${(bill.totalExpense || 0).toFixed(2)}`, 
+                presentDays: bill.presentDays || 0
+            };
+        });
+    
+    // 4. Return null if no valid bills were found (correct for Handlebars {{#if}})
+    return { name, bills: bills.length ? bills : null };
+}
+
+
 // ---------------- Middleware ----------------
+// CRITICAL FIX: Ensure the role is explicitly 'student' to prevent admin/student session confusion
 const isAuthenticated = (req, res, next) => {
-  if (req.session.userId) next();
-  else res.redirect("/login");
+    // 1. FIRST CHECK: If NO user is logged in (session is empty/destroyed)
+    if (!req.session.userId) {
+        return res.redirect("/login");
+    }
+
+    // 2. SECOND CHECK: If the user IS logged in, check their specific role.
+    if (req.session.role === 'admin') {
+        // If an Admin tries to access a /user/ route, send them back to their dashboard.
+        return res.redirect("/admin/dashboard");
+    }
+
+    // 3. THIRD CHECK: If the user IS logged in AND is a student, grant access.
+    if (req.session.role === 'student') {
+        next();
+    } else {
+        // Fallback for corrupt session (userId exists, but role is missing/invalid).
+        res.redirect("/login");
+    }
 };
 
-// Middleware to get unseen count (used in all routes except notifications page)
+// FIX: Define the middleware as a standard hoisted function
 async function notificationMiddleware(req, res, next) {
   try {
     // Assuming Notification model has a property to link to the user/hostel.
@@ -88,22 +145,6 @@ async function notificationMiddleware(req, res, next) {
 
 // ✅ Apply notification middleware to all routes in this router
 router.use(notificationMiddleware);
-
-
-// New utility function to format and process bill data
-function formatBillHistory(billingHistory, name) {
-    const bills = (billingHistory || [])
-        .sort((a, b) => new Date(b.date) - new Date(a.date)) // latest first
-        .map(bill => ({
-            displayDate: new Date(bill.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
-            formattedShare: `₹${bill.studentShare.toFixed(2)}`,
-            formattedRate: `₹${bill.ratePerDay.toFixed(2)}`,
-            formattedTotalExpense: `₹${bill.totalExpense.toFixed(2)}`,
-            presentDays: bill.presentDays
-        }));
-    
-    return { name, bills: bills.length ? bills : null };
-}
 
 
 // ---------------- EXISTING ROUTES ----------------
@@ -219,7 +260,6 @@ router.get("/mess-cut", isAuthenticated, async (req, res) => {
 // ---------------- NEW API ENDPOINTS ----------------
 
 // 1. API Endpoint to check if the bill flag is set (for dashboard AJAX check)
-// NOTE: This route was duplicated later in the file and has been consolidated here.
 router.get("/bill-status", isAuthenticated, async (req, res) => {
     try {
         const user = await User.findOne({ hostelid: req.session.userId })
@@ -381,29 +421,29 @@ router.post("/pay-bill", isAuthenticated, async (req, res) => {
 
 // Mess Bill History (Modified: removed variable redeclaration)
 router.get("/mess-bill", isAuthenticated, async (req, res) => {
-  try {
-    const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
+    try {
+        const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
 
-    if (!foundUser) return res.redirect("/login");
+        if (!foundUser) return res.redirect("/login");
+        
+        // Pass the middleware variable to the template (assuming it's set in res.locals)
+        const notificationCount = res.locals.notificationCount || 0; 
 
-    // Fetch all successful payments for this user (if this logic is necessary for the mess-bill page)
-    // NOTE: The formatBillHistory function provided does NOT take userPayments, so this line is redundant
-    // const userPayments = await Payment.find({ userId: foundUser._id, status: 'Completed' }).lean(); 
+        // Use the new function to format the bill data
+        const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
+        
+        // Render the template
+        res.render("user/mess-bill", { name, bills: bills, notificationCount });
 
-    // Use the new function to format the bill data
-    const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
-
-    res.render("user/mess-bill", { name, bills: bills });
-
-  } catch (err) {
-    console.error("Error fetching mess bill:", err);
-    res.status(500).send("Server Error");
-  }
+    } catch (err) {
+        console.error("❌ Error fetching mess bill:", err);
+        // Fallback error page
+        res.status(500).send("Server Error: Unable to process bill request.");
+    }
 });
 
+
 // Full History (FIXED: combined and removed variable redeclaration)
-// NOTE: I'm assuming the second block that was duplicating the route was the correct one to keep
-// as it uses the simpler formatBillHistory function (which is what is defined).
 router.get("/mess-bill1", isAuthenticated, async (req, res) => {
     try {
         const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
@@ -412,13 +452,16 @@ router.get("/mess-bill1", isAuthenticated, async (req, res) => {
     
         // Use the new function to format the bill data
         const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
+        
+        // Pass the middleware variable to the template (assuming it's set in res.locals)
+        const notificationCount = res.locals.notificationCount || 0; 
     
         // Render the new template
-        res.render("user/mess-bill1", { name, bills: bills });
+        res.render("user/mess-bill1", { name, bills: bills, notificationCount });
     
     } catch (err) {
         console.error("Error fetching full mess bill history:", err);
-        res.status(500).send("Server Error");
+        res.status(500).send("Server Error error");
     }
 });
 
@@ -528,16 +571,16 @@ router.post("/change-password", isAuthenticated, async (req, res) => {
 
 // Show all notifications for users
 router.get("/notifications", async (req, res) => {
-  try {
-    const notifications = await Notification.find().sort({ _id: -1 });
+  try {
+    const notifications = await Notification.find().sort({ _id: -1 });
 
-    // Mark all as seen when user opens the page
-    await Notification.updateMany({ seen: false }, { $set: { seen: true } });
+    // Mark all as seen when user opens the page
+    await Notification.updateMany({ seen: false }, { $set: { seen: true } });
 
-    res.render("user/notifications", { notifications });
-  } catch (err) {
-    res.status(500).send("Error loading notifications");
-  }
+    res.render("user/notifications", { notifications });
+  } catch (err) {
+    res.status(500).send("Error loading notifications");
+  }
 });
 
 // ---------------- MODULE EXPORT ----------------
