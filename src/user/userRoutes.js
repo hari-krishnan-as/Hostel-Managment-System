@@ -110,24 +110,24 @@ function formatBillHistory(billingHistory, name) {
 // ---------------- Middleware ----------------
 // CRITICAL FIX: Ensure the role is explicitly 'student' to prevent admin/student session confusion
 const isAuthenticated = (req, res, next) => {
-    // 1. FIRST CHECK: If NO user is logged in (session is empty/destroyed)
-    if (!req.session.userId) {
-        return res.redirect("/login");
-    }
+    // 1. FIRST CHECK: If NO user is logged in (session is empty/destroyed)
+    if (!req.session.userId) {
+        return res.redirect("/login");
+    }
 
-    // 2. SECOND CHECK: If the user IS logged in, check their specific role.
-    if (req.session.role === 'admin') {
-        // If an Admin tries to access a /user/ route, send them back to their dashboard.
-        return res.redirect("/admin/dashboard");
-    }
+    // 2. SECOND CHECK: If the user IS logged in, check their specific role.
+    if (req.session.role === 'admin') {
+        // If an Admin tries to access a /user/ route, send them back to their dashboard.
+        return res.redirect("/admin/dashboard");
+    }
 
-    // 3. THIRD CHECK: If the user IS logged in AND is a student, grant access.
-    if (req.session.role === 'student') {
-        next();
-    } else {
-        // Fallback for corrupt session (userId exists, but role is missing/invalid).
-        res.redirect("/login");
-    }
+    // 3. THIRD CHECK: If the user IS logged in AND is a student, grant access.
+    if (req.session.role === 'student') {
+        next();
+    } else {
+        // Fallback for corrupt session (userId exists, but role is missing/invalid).
+        res.redirect("/login");
+    }
 };
 
 // FIX: Define the middleware as a standard hoisted function
@@ -439,29 +439,6 @@ router.get("/mess-bill", isAuthenticated, async (req, res) => {
         console.error("❌ Error fetching mess bill:", err);
         // Fallback error page
         res.status(500).send("Server Error: Unable to process bill request.");
-    }
-});
-
-
-// Full History (FIXED: combined and removed variable redeclaration)
-router.get("/mess-bill1", isAuthenticated, async (req, res) => {
-    try {
-        const foundUser = await User.findOne({ hostelid: req.session.userId }).lean();
-    
-        if (!foundUser) return res.redirect("/login");
-    
-        // Use the new function to format the bill data
-        const { name, bills } = formatBillHistory(foundUser.billingHistory, foundUser.name);
-        
-        // Pass the middleware variable to the template (assuming it's set in res.locals)
-        const notificationCount = res.locals.notificationCount || 0; 
-    
-        // Render the new template
-        res.render("user/mess-bill1", { name, bills: bills, notificationCount });
-    
-    } catch (err) {
-        console.error("Error fetching full mess bill history:", err);
-        res.status(500).send("Server Error error");
     }
 });
 

@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> 
 </head>
 
 <body class="bg-[#16213E] text-[#FFFFFF] flex flex-col md:flex-row min-h-screen">
@@ -27,11 +28,13 @@
       </ul>
     </nav>
     <div class="px-4 md:px-8 mt-2 md:mt-auto">
-      <a href="/logout" class="flex items-center space-x-3 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition"><i class="fas fa-sign-out-alt"></i><span class="font-semibold">Log Out</span></a>
+      <a href="/logout" class="flex items-center space-x-3 p-2 rounded-md text-[#EEEEEE] hover:text-[#E94560] transition">
+        <i class="fas fa-sign-out-alt"></i><span class="font-semibold">Log Out</span>
+      </a>
     </div>
   </aside>
 
-  <!-- Main Section -->
+  <!-- Main Content -->
   <div class="flex flex-col flex-1">
     <header class="w-full flex items-center justify-between py-4 px-6 bg-[#0F3460] text-white">
       <button id="menu-btn" class="md:hidden focus:outline-none">
@@ -52,26 +55,26 @@
       </div>
     </header>
 
-    <main 
-      id="mess-bill-main" 
-      class="p-6 flex-1" 
-      data-has-bills="{{#if bills}}true{{else}}false{{/if}}"
-    >
+    <main id="mess-bill-main" class="p-6 flex-1">
       <h2 class="text-xl font-bold mb-6 text-pink-500 flex items-center space-x-2">
         <i class="fas fa-receipt"></i><span>Mess Bill Overview</span>
       </h2>
 
+      <!-- Status area -->
       <div id="bill-status-area" class="mb-8 max-w-xl mx-auto">
-        <p class="text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Checking for bills...</p>
+        <p class="text-center text-gray-400 py-4">
+          <i class="fas fa-spinner fa-spin mr-2"></i> Checking for bills...
+        </p>
       </div>
 
+      <!-- Full History Section -->
       <div id="history-table-container" class="hidden transition-opacity duration-300">
         <h3 class="text-xl font-semibold mb-4 text-red-300 flex items-center space-x-2 pt-4 border-t border-[#0F3460] mt-4">
           <i class="fas fa-history"></i><span>Full History Log</span>
         </h3>
 
         {{#if bills}}
-        <div class="overflow-x-auto bg-[#1A1A2E] rounded-lg shadow-lg">
+        <div id="bill-table" class="overflow-x-auto bg-[#1A1A2E] rounded-lg shadow-lg">
           <table class="min-w-full divide-y divide-[#0F3460]">
             <thead class="bg-[#0F3460]">
               <tr>
@@ -96,7 +99,7 @@
           </table>
         </div>
         {{else}}
-        <div class="bg-[#0F3460] p-4 rounded-md text-center mt-8">
+        <div id="no-bill-message" class="bg-[#0F3460] p-4 rounded-md text-center mt-8">
           <p class="text-lg text-gray-300">No mess bill history found yet.</p>
           <p class="text-sm text-gray-400 mt-2">The administrator generates the bill at the end of the month.</p>
         </div>
@@ -105,61 +108,44 @@
     </main>
   </div>
 
-  <!-- Wrapped script in raw block -->
- <script>
+  <!-- Hidden Razorpay Form -->
+  <form id="razorpayForm" style="display: none;">
+    <input type="hidden" name="amount" id="razorpayAmount">
+    <input type="hidden" name="billingCycle" id="razorpayBillingCycle">
+    <input type="hidden" name="presentDays" id="razorpayPresentDays">
+  </form>
+  
+  <script>
     const statusArea = document.getElementById('bill-status-area');
     const historyTableContainer = document.getElementById('history-table-container');
     const RAZORPAY_KEY_ID = 'rzp_test_RS7N4gK5yMwA9E'; 
     const PAYMENT_ENDPOINT = '/user/pay-bill';
 
-    function renderLatestBillCard(latestBill, isNewBill) {
-      // ... (Your existing render function logic remains the same)
-      const cardClass = isNewBill ? 'bg-red-700 border-red-400' : 'bg-[#1A1A2E] border-[#0F3460]';
-      const titleText = isNewBill ? 'NEW BILL GENERATED!' : 'Latest Bill Summary';
-      const titleColor = isNewBill ? 'text-white' : 'text-pink-500';
-      const topButtonText = isNewBill ? 'View New Bill Details & Clear Notification' : 'Show Full History Log';
-      const topButtonAction = isNewBill ? 'viewAndClearFlag()' : 'showFullHistory()';
-      const topButtonClass = isNewBill ? 'bg-white text-red-700 hover:bg-gray-200' : 'bg-white text-[#0F3460] hover:bg-gray-200';
-      let payNowButtonHTML = '';
+    function renderLatestBillCard(latestBill) {
+      let payButtonHTML = '';
       let statusBadgeHTML = '';
 
       if (latestBill.isPaid) {
         statusBadgeHTML = '<span class="bg-green-500 text-white text-xs font-extrabold px-3 py-1 rounded-full"><i class="fas fa-check-circle mr-1"></i> PAID</span>';
-        payNowButtonHTML = '<button disabled class="w-full mt-2 bg-gray-500 text-white px-4 py-2 rounded-md font-bold cursor-not-allowed opacity-75 shadow-md"><i class="fas fa-wallet mr-2"></i> Bill Paid</button>';
+        payButtonHTML = '<button disabled class="w-full mt-2 bg-gray-500 text-white px-4 py-2 rounded-md font-bold cursor-not-allowed opacity-75 shadow-md"><i class="fas fa-wallet mr-2"></i> Bill Paid</button>';
       } else {
-        statusBadgeHTML = isNewBill ? '<span class="bg-yellow-300 text-red-700 text-xs font-extrabold px-3 py-1 rounded-full">NEW</span>' : '';
-        payNowButtonHTML = `<button onclick="payNow(${latestBill.share}, '${latestBill.displayDate}', ${latestBill.presentDays})" class="w-full mt-2 bg-pink-500 text-[#16213E] px-4 py-2 rounded-md font-bold hover:bg-pink-600 transition shadow-md"><i class="fas fa-wallet mr-2"></i> Pay Now</button>`;
+        payButtonHTML = `<button onclick="payNow(${latestBill.share}, '${latestBill.displayDate}', ${latestBill.presentDays})" class="w-full mt-2 bg-pink-500 text-[#16213E] px-4 py-2 rounded-md font-bold hover:bg-pink-600 transition shadow-md"><i class="fas fa-wallet mr-2"></i> Pay Now</button>`;
       }
 
       return `
-        <div class="p-6 ${cardClass} rounded-lg shadow-xl border-4 transition-all duration-300">
+        <div class="p-6 bg-[#1A1A2E] border-4 border-[#E94560] rounded-lg shadow-xl transition-all duration-300">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold ${titleColor}"><i class="fas fa-receipt mr-2"></i>${titleText}</h3>
+            <h3 class="text-xl font-bold text-pink-500"><i class="fas fa-receipt mr-2"></i>Latest Bill Summary</h3>
             ${statusBadgeHTML}
           </div>
-          <div class="grid grid-cols-2 gap-4 border-t ${isNewBill ? 'border-red-500' : 'border-[#0F3460]'} pt-4">
+          <div class="grid grid-cols-2 gap-4 border-t border-[#0F3460] pt-4">
             <div><p class="text-sm text-gray-400">Billing Cycle</p><p class="text-lg font-semibold">${latestBill.displayDate}</p></div>
             <div><p class="text-sm text-gray-400">Your Share</p><p class="text-2xl font-bold text-green-400">${latestBill.formattedShare}</p></div>
             <div class="col-span-2"><p class="text-sm text-gray-400">Present Days</p><p class="text-lg font-semibold">${latestBill.presentDays}</p></div>
           </div>
-          <button onclick="${topButtonAction}" class="w-full mt-6 ${topButtonClass} px-4 py-2 rounded-md font-bold transition shadow-md">${topButtonText}</button>
-          ${payNowButtonHTML}
+          <button onclick="showFullHistory()" class="w-full mt-6 bg-white text-[#0F3460] px-4 py-2 rounded-md font-bold hover:bg-gray-200 transition shadow-md">Show Full History Log</button>
+          ${payButtonHTML}
         </div>`;
-    }
-
-    async function viewAndClearFlag() {
-      statusArea.innerHTML = '<p class="text-center text-gray-400 py-6"><i class="fas fa-spinner fa-spin mr-2"></i> Finalizing bill...</p>';
-      try {
-        // This endpoint resets the flag AND fetches data, then reloads
-        const response = await fetch('/user/fetch-latest-bill-data'); 
-        
-        // CRITICAL: Force a full reload AFTER clearing the flag. This ensures the 
-        // server-side render sees the updated billingHistory.
-        if (response.ok) window.location.reload(true); 
-        else alert('Failed to finalize bill view.');
-      } catch {
-        alert('Network error. Please try again.');
-      }
     }
 
     function showFullHistory() {
@@ -195,56 +181,35 @@
         });
         const result = await res.json();
         alert(result.message || 'Payment successful');
-        window.location.reload();
+        window.location.reload(); 
       } catch {
         alert('Error recording payment. Please check with admin.');
       }
     }
 
-    // CRITICAL FUNCTION: This logic ensures the page loads the current status every time.
     async function checkAndRenderBillCard() {
-      // 1. Initially check the server-side HBS context for bill history.
-      const hasHistoryServer = document.getElementById('mess-bill-main').getAttribute('data-has-bills') === 'true';
-      
-      // If the server says there's no history, display the "No bill" message immediately.
+      const hasHistoryServer = document.querySelector('#history-table-container #bill-table');
       if (!hasHistoryServer) {
-        statusArea.innerHTML = `<div class="bg-[#0F3460] p-4 rounded-md text-center"><p class="text-lg text-gray-300">No mess bill history yet.</p><p class="text-sm text-gray-400 mt-2">Generated at month-end.</p></div>`;
+        const noBillHtml = document.getElementById('no-bill-message').outerHTML;
+        statusArea.innerHTML = noBillHtml;
+        document.getElementById('no-bill-message').style.display = 'block'; 
         return;
       }
-      
-      // 2. If the server says there MIGHT be history, fetch the dynamic bill card data.
-      try {
-        // This is the core AJAX call that checks for the latest bill and the needsBillRefresh flag.
-        const res = await fetch('/user/latest-bill-card-data'); 
-        
-        if (!res.ok) {
-             // On API failure (404, 500), check the server-rendered history to see if it exists.
-             // If the server rendered history is available, reveal it.
-             if (hasHistoryServer) {
-                 showFullHistory();
-                 statusArea.innerHTML = '<p class="text-red-500 mt-2 text-center">Failed to load bill summary. Showing full history below.</p>';
-                 return;
-             }
-             // Otherwise, show generic error.
-             statusArea.innerHTML = `<p class="text-red-500 mt-4 text-center">Error loading bill summary (Status ${res.status}).</p>`;
-             return;
-        }
-        
-        const data = await res.json();
 
+      try {
+        const res = await fetch('/user/latest-bill-card-data', { cache: 'no-cache' }); 
+        if (!res.ok) {
+          showFullHistory();
+          statusArea.innerHTML = '<p class="text-red-500 mt-2 text-center">Failed to load bill summary. Showing full history below.</p>';
+          return;
+        }
+
+        const data = await res.json();
         if (data.success && data.latestBill) {
-          statusArea.innerHTML = renderLatestBillCard(data.latestBill, data.isNewBill);
-          
-          // Show alert if the bill is new
-          if (data.isNewBill) {
-              alert('A new Mess Bill has been generated by the admin! Click "View New Bill Details" to finalize the view.');
-          }
-          
+          statusArea.innerHTML = renderLatestBillCard(data.latestBill);
         } else {
-            // This case occurs if the server-side check was TRUE but the API returned no latest bill data.
-            // This should not happen, but if it does, show the full history.
-            showFullHistory();
-            statusArea.innerHTML = '<p class="text-red-500 mt-2 text-center">Bill summary not found. Showing full history log.</p>';
+          showFullHistory();
+          statusArea.innerHTML = '<p class="text-red-500 mt-2 text-center">Bill summary not found. Showing full history log.</p>';
         }
       } catch (err) {
         console.error("Network or JSON parsing error:", err);
@@ -252,18 +217,13 @@
       }
     }
 
-    // --- Removed Polling Logic ---
+    // Start process
+    checkAndRenderBillCard();
 
+    // Menu toggle
     document.getElementById('menu-btn').addEventListener('click', () => {
       document.querySelector('aside').classList.toggle('hidden');
     });
-
-    window.viewAndClearFlag = viewAndClearFlag;
-    window.showFullHistory = showFullHistory;
-    window.payNow = payNow;
-    
-    // Initial call to start the process (NO POLLING)
-    checkAndRenderBillCard();
-  </script>
+  </script>
 </body>
 </html>
