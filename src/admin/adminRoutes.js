@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
 const User = require("../../models/User");
+const BannedId = require('../../models/BannedId');
 const Notification = require("../../models/notification");
 const Expense = require("../../models/expense");
 const Payment = require("../../models/payment"); 
@@ -125,34 +126,59 @@ router.get("/dashboard", isAuthenticated, async (req, res) => {
 
 
 // Registered Users List (UNCHANGED)
+
 router.get("/pending-users", isAuthenticated, async (req, res) => {
-  const admin = await User.findOne({ hostelid: req.session.userId });
-  
-  if (!admin || admin.role !== "admin") return res.redirect("/login");
+  const admin = await User.findOne({ hostelid: req.session.userId });
+  
+  if (!admin || admin.role !== "admin") return res.redirect("/login");
+  
+  const registeredUsers = await User.find({ 
+      role: { $ne: 'admin' },
+      isApproved: false // Assuming you want only pending users for a 'pending-users' page
+  }).select('-password');
 
-  // 1. Fetch all registered students (excluding admin)
-  const registeredUsers = await User.find({ role: { $ne: 'admin' } }).select('-password');
-
-    // 2. Get unique program names
-    const uniqueProgramsSet = new Set(
-        registeredUsers.map(user => String(user.program).toUpperCase())
-    );
-    
-    // Convert the Set back to an array for the template
-    const uniquePrograms = [...uniqueProgramsSet].filter(p => p);
-    
-  res.render("admin/pending-users", { 
-    registeredUsers: registeredUsers,
-    uniquePrograms: uniquePrograms // Only contains uppercase/standardized program names
-});
-});
-
-// Approve user (UNCHANGED)
-router.post("/approve/:id", isAuthenticated, async (req, res) => {
-  await User.findByIdAndUpdate(req.params.id, { isApproved: true });
-  res.redirect("/admin/pending-users");
+  // 2. Get unique program names
+  const uniqueProgramsSet = new Set(
+    registeredUsers.map(user => String(user.program).toUpperCase())
+  );
+  
+  // Convert the Set back to an array for the template
+  const uniquePrograms = [...uniqueProgramsSet].filter(p => p);
+  
+  res.render("admin/pending-users", { 
+    registeredUsers: registeredUsers,
+    uniquePrograms: uniquePrograms
+  });
 });
 
+// DELETE user (NEW)
+router.post("/delete/:id", isAuthenticated, async (req, res) => {
+    const admin = await User.findOne({ hostelid: req.session.userId });
+    if (!admin || admin.role !== "admin") return res.redirect("/login");
+
+    try {
+        const userIdToDelete = req.params.id;
+        
+        // 1. Find the user before deletion to get their unique ID
+        const userToDelete = await User.findById(userIdToDelete).select('hostelid');
+        
+        if (userToDelete) {
+            // 2. Add the unique ID to the Banned list
+            await BannedId.create({ 
+                hostelid: userToDelete.hostelid,
+                reason: 'User deleted by admin via dashboard.'
+            });
+            
+            // 3. Delete the user
+            await User.findByIdAndDelete(userIdToDelete);
+            console.log(`✅ User ${userToDelete.hostelid} deleted and ID reserved.`);
+        }
+    } catch (error) {
+        console.error("Error deleting user or reserving ID:", error);
+    }
+    
+    res.redirect("/admin/pending-users");
+});
 
 // Approve Mess Cut (UNCHANGED)
 router.get("/approve-messcut", isAuthenticated, async (req, res) => {
